@@ -186,6 +186,7 @@ Moe::Boot_fs::init_stage2()
         case L4util_l4mod_mod_flag_roottask:
         case L4util_l4mod_mod_flag_sigma0:
         case L4util_l4mod_mod_flag_kernel:
+        case L4util_l4mod_mod_flag_cpu_fw:
           continue;
         default: break;
         }

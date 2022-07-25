@@ -16,10 +16,17 @@
 /** Flags for #l4util_l4mod_mod.flags */
 enum l4util_l4mod_mod_info_flag
 {
-  L4util_l4mod_mod_flag_unspec    = 0,      /**< Flag for a generic module. */
-  L4util_l4mod_mod_flag_kernel    = 1,      /**< Flag for the kernel module. */
-  L4util_l4mod_mod_flag_sigma0    = 2,      /**< Flag for the sigma0 module. */
-  L4util_l4mod_mod_flag_roottask  = 3,      /**< Flag for the root task module. */
+  L4util_l4mod_mod_flag_unspec    = 0,      /**< A generic module. */
+  L4util_l4mod_mod_flag_kernel    = 1,      /**< The kernel module. */
+  L4util_l4mod_mod_flag_sigma0    = 2,      /**< The sigma0 module. */
+  L4util_l4mod_mod_flag_roottask  = 3,      /**< The root task module. */
+  /**
+   * A CPU firmware module containing one or several firmware update blobs.
+   *
+   * Such modules are announced via L4::Kip::Mem_desc::Arch regions. These
+   * regions are exclusively used by the kernel.
+   */
+  L4util_l4mod_mod_flag_cpu_fw    = 4,
   L4util_l4mod_mod_flag_mask      = 7 << 0, /**< Mask for specified flags. */
 };
 
