@@ -119,7 +119,8 @@ static void insert_regions()
 
           void *x = Global::local_rm
             ->attach(reinterpret_cast<void*>(r->start), r->end - r->start + 1,
-                     Region_handler(pager, L4_INVALID_CAP, 0,
+                     Region_handler(pager, L4_INVALID_CAP,
+                                    L4::Cap<L4::Task>::Invalid, 0,
                                     flags.region_flags()),
                      flags.attach_flags(), L4_PAGESHIFT, name.data, name.length);
           if (x == L4_INVALID_PTR)

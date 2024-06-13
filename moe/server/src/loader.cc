@@ -147,6 +147,7 @@ Moe_app_model::prog_attach_ds(l4_addr_t addr, unsigned long size,
 {
   void *x = _task->rm()->attach(reinterpret_cast<void*>(addr), size,
                                 Region_handler(ds, L4_INVALID_CAP,
+                                               L4::Cap<L4::Task>::Invalid,
                                                offset, flags.region_flags()),
                                 flags, L4_PAGESHIFT,
                                 name, name ? strlen(name) : 0);

@@ -43,7 +43,8 @@ Region_map::init()
 
 l4_ret_t
 Region_ops::map(Region_handler const *h, l4_addr_t local_addr,
-                Region const &r, bool writable, l4_umword_t *result)
+                Region const &r, bool writable, L4::Cap<L4::Task> /* dst */,
+                l4_umword_t *result)
 {
   *result = 0;
 

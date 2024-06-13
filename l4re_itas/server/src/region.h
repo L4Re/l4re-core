@@ -29,7 +29,7 @@ public:
   typedef l4_umword_t Map_result;
   static l4_ret_t map(Region_handler const *h, l4_addr_t addr,
                       L4Re::Util::Region const &r, bool writable,
-                      l4_umword_t *result);
+                      L4::Cap<L4::Task> dst, l4_umword_t *result);
 
   static void free(Region_handler const *h, l4_addr_t start, unsigned long size);
   static l4_ret_t map_info(Region_handler const *h,
