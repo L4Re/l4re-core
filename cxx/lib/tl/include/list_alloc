@@ -33,7 +33,8 @@ private:
   Mem_block *_first;
 
   inline void check_overlap(void *, unsigned long) const;
-  inline void sanity_check_list(char const *, char const *) const;
+  inline void sanity_check_list(char const *, char const *,
+                                bool unmerged = true) const;
   inline void merge(Mem_block *, Mem_block *);
 
 public:
@@ -116,7 +117,7 @@ public:
 class List_alloc_sanity_guard
 {
 public:
-  List_alloc_sanity_guard(List_alloc const *, char const *)
+  List_alloc_sanity_guard(List_alloc const *, char const *, bool = true)
   {}
 
 };
@@ -127,7 +128,7 @@ List_alloc::check_overlap(void *, unsigned long) const
 {}
 
 void
-List_alloc::sanity_check_list(char const *, char const *) const
+List_alloc::sanity_check_list(char const *, char const *, bool) const
 {}
 
 #else
@@ -139,9 +140,10 @@ private:
   char const *func;
 
 public:
-  List_alloc_sanity_guard(List_alloc const *a, char const *func)
+  List_alloc_sanity_guard(List_alloc const *a, char const *func,
+                          bool unmerged = false)
     : a(a), func(func)
-  { a->sanity_check_list(func, "entry"); }
+  { a->sanity_check_list(func, "entry", unmerged); }
 
   ~List_alloc_sanity_guard()
   { a->sanity_check_list(func, "exit"); }
@@ -179,7 +181,8 @@ List_alloc::check_overlap(void *b, unsigned long s) const
 }
 
 void
-List_alloc::sanity_check_list(char const *func, char const *info) const
+List_alloc::sanity_check_list(char const *func, char const *info,
+                              bool unmerged) const
 {
   Mem_block const *c = _first;
   for (;c ; c = c->next)
@@ -192,7 +195,10 @@ List_alloc::sanity_check_list(char const *func, char const *info) const
                        << "): list order violation\n";
             }
 
-          if (((unsigned long)c) + c->size > (unsigned long)c->next)
+          auto cmp = +[](unsigned long a, unsigned long b){ return a >= b; };
+          if (unmerged)
+            cmp = +[](unsigned long a, unsigned long b){ return a > b; };
+          if (cmp(((unsigned long)c) + c->size, (unsigned long)c->next))
             {
               L4::cerr << "List_alloc(FATAL): " << func << '(' << info
                        << "): list order violation\n";
@@ -209,7 +215,8 @@ List_alloc::sanity_check_list(char const *func, char const *info) const
 void
 List_alloc::merge(Mem_block *prev, Mem_block *c)
 {
-  List_alloc_sanity_guard __attribute__((unused)) guard(this, __func__);
+  // We allow the list to not be merged in the beginning.
+  List_alloc_sanity_guard __attribute__((unused)) guard(this, __func__, true);
   int iters = 1;
   if (prev) {
     c = prev;
