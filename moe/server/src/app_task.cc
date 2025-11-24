@@ -10,7 +10,9 @@
 
 #include "app_task.h"
 #include "globals.h"
+#include <l4/sigma0/sigma0.h>
 
+extern "C" void cov_print(void) __attribute__((weak));
 
 l4_ret_t
 App_task::op_signal(L4Re::Parent::Rights, unsigned long sig, unsigned long val)
@@ -22,6 +24,22 @@ App_task::op_signal(L4Re::Parent::Rights, unsigned long sig, unsigned long val)
         if (val != 0)
           L4::cout << "MOE: task " << this << " exited with " << val
                    << '\n';
+
+        if (cov_print)
+          {
+            // dump moe's coverage
+            cov_print();
+
+            // let sigma0 dump its coverage
+            l4sigma0_print_cov_data(Sigma0_cap);
+
+            // let the kernel dump its coverage
+            l4_msg_regs_t *v = l4_utcb_mr_u(l4_utcb());
+            v->mr[0] = 0x400;
+            l4_ipc_call(L4_BASE_DEBUGGER_CAP, l4_utcb(),
+                        l4_msgtag(L4_PROTO_DEBUGGER, 1, 0, 0),
+                        L4_IPC_NEVER);
+          }
 
         // Invoke DTOR to remove init-task, its resources and redirect
         // in-flight IPCs.

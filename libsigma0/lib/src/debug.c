@@ -16,3 +16,13 @@ l4sigma0_debug_dump(l4_cap_idx_t pager)
 
   l4_ipc_call(pager, l4_utcb(), tag, L4_IPC_NEVER);
 }
+
+
+L4_CV void
+l4sigma0_print_cov_data(l4_cap_idx_t pager)
+{
+  l4_msgtag_t tag = l4_msgtag(L4_PROTO_SIGMA0, 1, 0, 0);
+  l4_utcb_mr()->mr[0] = SIGMA0_REQ_COV;
+
+  l4_ipc_call(pager, l4_utcb(), tag, L4_IPC_NEVER);
+}

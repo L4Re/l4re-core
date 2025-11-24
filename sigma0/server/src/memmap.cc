@@ -28,6 +28,7 @@
 #include "memmap_internal.h"
 #include "ioports.h"
 
+extern "C" void cov_print(void) __attribute__((weak));
 
 l4_kernel_info_t *l4_info;
 
@@ -242,6 +243,12 @@ void handle_sigma0_request(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
       break;
     case SIGMA0_REQ_ID_FPAGE_ANY:
       map_free_page(l4_fpage_size(l4_fpage_t{m->mr[1]}), t, answer);
+      break;
+    case SIGMA0_REQ_ID_COV:
+      if (cov_print)
+        cov_print();
+      else
+        answer->error(L4_ENOSYS);
       break;
     default:
       answer->error(L4_ENOSYS);

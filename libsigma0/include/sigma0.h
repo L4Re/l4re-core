@@ -47,6 +47,7 @@
 #define SIGMA0_REQ_ID_FPAGE_ANY		  0x90     /**< Any */
 #define SIGMA0_REQ_ID_KIP		  0xA0     /**< KIP */
 #define SIGMA0_REQ_ID_DEBUG_DUMP	  0xC0     /**< Debug dump */
+#define SIGMA0_REQ_ID_COV		  0xE0     /**< Trigger cov dump */
 
 #define SIGMA0_IS_MAGIC_REQ(d1)	\
   ((d1 & SIGMA0_REQ_MASK) == SIGMA0_REQ_MAGIC)     /**< Check if magic */
@@ -61,6 +62,7 @@
 #define SIGMA0_REQ_FPAGE_ANY            (SIGMA0_REQ(FPAGE_ANY))          /**< Any */
 #define SIGMA0_REQ_KIP                  (SIGMA0_REQ(KIP))                /**< KIP */
 #define SIGMA0_REQ_DEBUG_DUMP           (SIGMA0_REQ(DEBUG_DUMP))         /**< Debug dump */
+#define SIGMA0_REQ_COV                  (SIGMA0_REQ(COV))                /**< Cov */
 /**@}*/
 
 /**
@@ -197,6 +199,8 @@ L4_CV void l4sigma0_debug_dump(l4_cap_idx_t sigma0);
  * \return  A string containing the error message.
  */
 L4_INLINE char const *l4sigma0_map_errstr(int err);
+
+L4_CV void l4sigma0_print_cov_data(l4_cap_idx_t pager);
 
 /**@}*/
 
