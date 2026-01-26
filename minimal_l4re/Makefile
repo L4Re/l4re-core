@@ -24,3 +24,7 @@ LINK_LIBC_LIBNAMES = $(call BID_PKG_CONFIG,$(OBJ_BASE),--libs -- --link-libc,$(R
 LINK_LIBC_LIBS = $(foreach l,$(LINK_LIBC_LIBNAMES),$(firstword $(wildcard $(addsuffix /$(l),$(L4LIBDIR)))))
 
 OBJS_libc_minimal_l4re.a += $(LINK_LIBC_LIBS)
+
+# We must add an explicit prerequisite here. Amending OBJS after including the
+# role is not fully supported because rule prerequisites are expanded eagerly.
+libc_minimal_l4re.a: $(LINK_LIBC_LIBS)
