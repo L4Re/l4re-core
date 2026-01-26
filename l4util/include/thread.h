@@ -18,6 +18,8 @@
 #include <l4/sys/types.h>
 #include <l4/sys/scheduler.h>
 
+#include <l4/util/arch/thread.h>
+
 L4_BEGIN_DECLS
 
 /**

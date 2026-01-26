@@ -135,4 +135,6 @@ l4_cache_dma_coherent_full(void) L4_NOTHROW;
 
 L4_END_DECLS
 
+#include <l4/sys/arch/cache.h>
+
 #endif /* ! __L4SYS__INCLUDE__CACHE_H__ */

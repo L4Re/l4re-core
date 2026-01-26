@@ -283,3 +283,5 @@ l4_platform_ctl_cpu_disable(l4_cap_idx_t pfc,
 {
   return l4_platform_ctl_cpu_disable_u(pfc, phys_id, l4_utcb());
 }
+
+#include <l4/sys/arch/platform_control.h>

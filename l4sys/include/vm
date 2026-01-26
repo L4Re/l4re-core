@@ -29,6 +29,23 @@ namespace L4 {
  */
 class Vm : public Kobject_t<Vm, Task, L4_PROTO_VM>
 {
+public:
+#if defined(__arm__) || defined(__aarch64__)
+  /**
+   * Map the GIC virtual CPU interface page to the task in case Fiasco
+   * detected a GIC version 2.
+   *
+   * \param vgicc_fpage   Flexpage that describes an area in the address space
+   *                      of the destination task to map the vGICC page to.
+   * \utcb{utcb}
+   *
+   * \return Syscall return tag.
+   */
+  l4_msgtag_t vgicc_map(l4_fpage_t const vgicc_fpage,
+                        l4_utcb_t *utcb = l4_utcb()) noexcept
+  { return l4_task_vgicc_map_u(cap(), vgicc_fpage, utcb); }
+#endif
+
 protected:
   Vm();
 

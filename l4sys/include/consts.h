@@ -15,6 +15,7 @@
 #ifndef __L4_SYS__INCLUDE__CONSTS_H__
 #define __L4_SYS__INCLUDE__CONSTS_H__
 
+#include <l4/sys/arch/consts.h>
 #include <l4/sys/compiler.h>
 #include <l4/sys/l4int.h>
 

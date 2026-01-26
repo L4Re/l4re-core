@@ -1148,3 +1148,5 @@ l4_thread_register_doorbell_irq(l4_cap_idx_t thread,
 {
   return l4_thread_register_doorbell_irq_u(thread, irq, l4_utcb());
 }
+
+#include <l4/sys/arch/thread.h>

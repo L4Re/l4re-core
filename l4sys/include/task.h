@@ -498,3 +498,5 @@ l4_task_add_ku_mem(l4_cap_idx_t task, l4_fpage_t *ku_mem) L4_NOTHROW
 {
   return l4_task_add_ku_mem_u(task, ku_mem, l4_utcb());
 }
+
+#include <l4/sys/arch/task.h>

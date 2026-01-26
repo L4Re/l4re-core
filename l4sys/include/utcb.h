@@ -55,6 +55,71 @@
  */
 typedef struct l4_utcb_t l4_utcb_t;
 
+typedef struct l4_exc_regs_t l4_exc_regs_t;
+
+/**
+ * \internal
+ * Get the UTCB address.
+ * \ingroup l4_utcb_api
+ */
+L4_INLINE l4_utcb_t *l4_utcb_direct(void) L4_NOTHROW L4_PURE;
+
+/**
+ * Access function to get the program counter of the exception state.
+ * \ingroup l4_utcb_exc_api
+ *
+ * \param  u  UTCB
+ * \return The program counter register out of the exception state.
+ */
+L4_INLINE l4_umword_t l4_utcb_exc_pc(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
+
+/**
+ * Set the program counter register in the exception state.
+ * \ingroup l4_utcb_exc_api
+ *
+ * \param u   UTCB
+ * \param pc  The program counter to set.
+ *
+ */
+L4_INLINE void l4_utcb_exc_pc_set(l4_exc_regs_t *u, l4_addr_t pc) L4_NOTHROW;
+
+/**
+ * Get the value out of an exception UTCB that describes the type of exception.
+ * \ingroup l4_utcb_exc_api
+ */
+L4_INLINE unsigned long l4_utcb_exc_typeval(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
+
+/**
+ * Check whether an exception IPC is a page fault.
+ * \ingroup l4_utcb_exc_api
+ *
+ * \returns 0 if not, != 0 if yes
+ *
+ * Function to check whether an exception IPC is a page fault, also applies
+ * to I/O pagefaults.
+ */
+L4_INLINE int l4_utcb_exc_is_pf(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
+
+/**
+ * Function to get the L4 style page fault address out of an exception.
+ * \ingroup l4_utcb_exc_api
+ */
+L4_INLINE l4_addr_t l4_utcb_exc_pfa(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
+
+/**
+ * Check whether an exception IPC was triggered via l4_thread_ex_regs().
+ * \ingroup l4_utcb_exc_api
+ *
+ * \retval 0   Exception was not triggered through ex_regs.
+ * \retval !=0 Exception was triggered through ex_regs.
+ *
+ * This function checks if the exception was emitted by using the
+ * L4_THREAD_EX_REGS_TRIGGER_EXCEPTION flag in an l4_thread_ex_regs() call.
+ */
+L4_INLINE int l4_utcb_exc_is_ex_regs_exception(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
+
+#include <l4/sys/arch/utcb.h>
+
 /**
  * \defgroup l4_utcb_mr_api Message Registers (MRs)
  * \ingroup l4_utcb_api
@@ -138,13 +203,6 @@ L4_BEGIN_DECLS
 L4_CV l4_utcb_t *l4_utcb_wrap(void) L4_NOTHROW L4_PURE;
 
 /**
- * \internal
- * Get the UTCB address.
- * \ingroup l4_utcb_api
- */
-L4_INLINE l4_utcb_t *l4_utcb_direct(void) L4_NOTHROW L4_PURE;
-
-/**
  * Get the UTCB address.
  * \ingroup l4_utcb_api
  */
@@ -209,61 +267,6 @@ L4_INLINE l4_exc_regs_t *l4_utcb_exc(void) L4_NOTHROW L4_PURE;
  * \param u  The UTCB pointer to access.
  */
 L4_INLINE l4_exc_regs_t *l4_utcb_exc_u(l4_utcb_t *u) L4_NOTHROW L4_PURE;
-
-/**
- * Access function to get the program counter of the exception state.
- * \ingroup l4_utcb_exc_api
- *
- * \param  u  UTCB
- * \return The program counter register out of the exception state.
- */
-L4_INLINE l4_umword_t l4_utcb_exc_pc(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
-
-/**
- * Set the program counter register in the exception state.
- * \ingroup l4_utcb_exc_api
- *
- * \param u   UTCB
- * \param pc  The program counter to set.
- *
- */
-L4_INLINE void l4_utcb_exc_pc_set(l4_exc_regs_t *u, l4_addr_t pc) L4_NOTHROW;
-
-/**
- * Get the value out of an exception UTCB that describes the type of exception.
- * \ingroup l4_utcb_exc_api
- */
-L4_INLINE unsigned long l4_utcb_exc_typeval(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
-
-/**
- * Check whether an exception IPC is a page fault.
- * \ingroup l4_utcb_exc_api
- *
- * \returns 0 if not, != 0 if yes
- *
- * Function to check whether an exception IPC is a page fault, also applies
- * to I/O pagefaults.
- */
-L4_INLINE int l4_utcb_exc_is_pf(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
-
-/**
- * Function to get the L4 style page fault address out of an exception.
- * \ingroup l4_utcb_exc_api
- */
-L4_INLINE l4_addr_t l4_utcb_exc_pfa(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
-
-
-/**
- * Check whether an exception IPC was triggered via l4_thread_ex_regs().
- * \ingroup l4_utcb_exc_api
- *
- * \retval 0   Exception was not triggered through ex_regs.
- * \retval !=0 Exception was triggered through ex_regs.
- *
- * This function checks if the exception was emitted by using the
- * L4_THREAD_EX_REGS_TRIGGER_EXCEPTION flag in an l4_thread_ex_regs() call.
- */
-L4_INLINE int l4_utcb_exc_is_ex_regs_exception(l4_exc_regs_t const *u) L4_NOTHROW L4_PURE;
 
 /**
  * Enable or disable inheritance of FPU state to receiver.

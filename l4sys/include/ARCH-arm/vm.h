@@ -11,6 +11,9 @@
  */
 #pragma once
 
+#include <l4/sys/err.h>
+#include <l4/sys/types.h>
+
 /**
  * \defgroup l4_vm_tz_api VM API for TZ
  * \brief Virtual Machine API for ARM TrustZone

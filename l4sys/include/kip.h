@@ -297,3 +297,5 @@ l4_kip_kernel_has_feature(l4_kernel_info_t const *kip, char const *str)
 
   return 0;
 }
+
+#include <l4/sys/arch/kip.h>

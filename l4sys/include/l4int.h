@@ -52,4 +52,6 @@ typedef l4_uint64_t l4_cpu_time_t;
  */
 typedef l4_uint64_t l4_kernel_clock_t;
 
+#include <l4/sys/arch/l4int.h>
+
 #endif /* !__L4_SYS_L4INT_H__ */

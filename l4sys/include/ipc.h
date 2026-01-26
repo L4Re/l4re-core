@@ -690,5 +690,6 @@ l4_sndfpage_add(l4_fpage_t const snd_fpage, unsigned long snd_base,
   return l4_sndfpage_add_u(snd_fpage, snd_base, tag, l4_utcb());
 }
 
+#include <l4/sys/arch/ipc.h>
 
 #endif /* ! __L4SYS__INCLUDE__L4API_FIASCO__IPC_H__ */
