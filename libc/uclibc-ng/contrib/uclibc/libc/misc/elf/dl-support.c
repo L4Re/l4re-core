@@ -36,7 +36,9 @@ ElfW(Phdr) *_dl_phdr;
 size_t _dl_phnum;
 size_t _dl_pagesize;
 
+#ifdef CONFIG_MMU
 ElfW(auxv_t) _dl_auxvt[AUX_MAX_AT_ID];
+#endif
 ElfW(auxv_t) *_dl_auxv_start;
 
 #ifndef __NOT_FOR_L4__
@@ -49,28 +51,42 @@ void internal_function _dl_aux_init (ElfW(auxv_t) *av)
 {
    _dl_auxv_start = av;
 
+#ifdef CONFIG_MMU
    memset(_dl_auxvt, 0x00, sizeof(_dl_auxvt));
+#endif
    for (; av->a_type != AT_NULL; av++)
      {
+#ifdef CONFIG_MMU
        if (av->a_type < AUX_MAX_AT_ID)
          _dl_auxvt[av->a_type] = *av;
-
-#ifndef __NOT_FOR_L4__
-       if (av->a_type == AT_L4_ENV && &l4re_global_env)
-         l4re_global_env = (void *)av->a_un.a_val;
-       else if (av->a_type == AT_L4_KIP && &l4_global_kip)
-         l4_global_kip = (void *)av->a_un.a_val;
 #endif
+
+       switch (av->a_type)
+        {
+        case AT_PHDR:
+          /* Get the program headers base address from the aux vect */
+          _dl_phdr = (ElfW(Phdr) *) av->a_un.a_val;
+          break;
+        case AT_PHNUM:
+          /* Get the number of program headers from the aux vect */
+          _dl_phnum = (size_t) av->a_un.a_val;
+          break;
+        case AT_PAGESZ:
+          /* Get the pagesize from the aux vect */
+          _dl_pagesize = (av->a_un.a_val) ? (size_t) av->a_un.a_val : PAGE_SIZE;
+          break;
+#ifndef __NOT_FOR_L4__
+        case AT_L4_ENV:
+          if (&l4re_global_env)
+            l4re_global_env = (void *)av->a_un.a_val;
+          break;
+        case AT_L4_KIP:
+          if (&l4_global_kip)
+            l4_global_kip = (void *)av->a_un.a_val;
+          break;
+#endif
+        }
      }
-
-   /* Get the program headers base address from the aux vect */
-   _dl_phdr = (ElfW(Phdr) *) _dl_auxvt[AT_PHDR].a_un.a_val;
-
-   /* Get the number of program headers from the aux vect */
-   _dl_phnum = (size_t) _dl_auxvt[AT_PHNUM].a_un.a_val;
-
-   /* Get the pagesize from the aux vect */
-   _dl_pagesize = (_dl_auxvt[AT_PAGESZ].a_un.a_val) ? (size_t) _dl_auxvt[AT_PAGESZ].a_un.a_val : PAGE_SIZE;
 }
 
 #if defined(USE_TLS) && USE_TLS

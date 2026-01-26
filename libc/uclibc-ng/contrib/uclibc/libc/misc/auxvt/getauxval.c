@@ -23,6 +23,7 @@
 
 unsigned long int __getauxval (unsigned long int __type)
 {
+#ifdef CONFIG_MMU
 	// Requested value part of cached subset of auxiliary vector?
 	if (__type < AUX_MAX_AT_ID) {
 		if (_dl_auxvt[__type].a_type == __type)
@@ -31,6 +32,7 @@ unsigned long int __getauxval (unsigned long int __type)
 		__set_errno (ENOENT);
 		return 0;
 	}
+#endif
 
 	// Otherwise we have to iterate the auxiliary vector.
 	for (ElfW(auxv_t) *entry = _dl_auxv_start; entry->a_type != AT_NULL; entry++)
