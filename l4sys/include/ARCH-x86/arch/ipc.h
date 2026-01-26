@@ -17,35 +17,14 @@
 #include <l4/sys/types.h>
 #include <l4/sys/consts.h>
 
-/*****************************************************************************
- *** Implementation
- *****************************************************************************/
-
-/*
- * Some words about the sysenter entry frame: Since the sysenter instruction
- * automatically reloads the instruction pointer (eip) and the stack pointer
- * (esp) after kernel entry, we have to save both registers preliminary to
- * that instruction. We use ecx to store the user-level esp and save eip onto
- * the stack. The ecx register contains the IPC timeout and has to be saved
- * onto the stack, too. The ebp register is saved for compatibility reasons
- * with the Hazelnut kernel. Both the esp and the ss register are also pushed
- * onto the stack to be able to return using the "lret" instruction from the
- * sysexit trampoline page if Small Address Spaces are enabled.
- */
-
 #ifdef __PIC__
 # define L4S_PIC_SAVE "push %%ebx; "
 # define L4S_PIC_RESTORE "pop %%ebx; "
 # define L4S_PIC_CLOBBER
 # define L4S_PIC_SYSCALL , [func] "m" (__l4sys_invoke_indirect)
-# if 1
 extern void (*__l4sys_invoke_indirect)(void);
-#  define IPC_SYSENTER      "# indirect sys invoke \n\t" \
-                            "call *%[func]    \n\t"
-# else
-#  define L4S_PIC_SYSCALL
-#  define IPC_SYSENTER      "call __l4sys_invoke_direct@plt    \n\t"
-# endif
+# define IPC_SYSENTER      "# indirect sys invoke \n\t" \
+                           "call *%[func]    \n\t"
 # define IPC_SYSENTER_ASM   call __l4sys_invoke_direct@plt
 #else
 /**
@@ -76,14 +55,6 @@ extern void (*__l4sys_invoke_indirect)(void);
 #  define L4S_PIC_SYSCALL
 
 #endif
-/**
- * \internal
- * \brief Kernel entry code for inline assembly.
- */
-#define L4_ENTER_KERNEL L4S_PIC_SAVE "push %%ebp; " \
-                        IPC_SYSENTER                \
-                        " pop %%ebp; " L4S_PIC_RESTORE
-
 
 L4_INLINE l4_msgtag_t
 l4_ipc(l4_cap_idx_t dest, l4_utcb_t *u,
@@ -98,7 +69,7 @@ l4_ipc(l4_cap_idx_t dest, l4_utcb_t *u,
   (void)u;
 
   __asm__ __volatile__
-    (L4_ENTER_KERNEL
+    (L4S_PIC_SAVE "push %%ebp; " IPC_SYSENTER " pop %%ebp; " L4S_PIC_RESTORE
      :
      "=d" (dummy2),
      "=S" (slabel),
