@@ -51,9 +51,6 @@ void internal_function _dl_aux_init (ElfW(auxv_t) *av)
 {
    _dl_auxv_start = av;
 
-#ifdef CONFIG_MMU
-   memset(_dl_auxvt, 0x00, sizeof(_dl_auxvt));
-#endif
    for (; av->a_type != AT_NULL; av++)
      {
 #ifdef CONFIG_MMU
