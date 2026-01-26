@@ -86,6 +86,7 @@ enum L4_task_ldt_x86_consts
  *** Implementation
  *****************************************************************************/
 
+#include <l4/sys/compiler.h>
 #include <l4/sys/task.h>
 #include <l4/sys/thread.h>
 
@@ -109,6 +110,16 @@ fiasco_gdt_get_entry_offset(l4_cap_idx_t thread, l4_utcb_t *utcb)
   if (l4_error_u(l4_ipc_call(thread, utcb, l4_msgtag(L4_PROTO_THREAD, 1, 0, 0), L4_IPC_NEVER), utcb))
     return -1;
   return l4_utcb_mr_u(utcb)->mr[0];
+}
+
+L4_INLINE long
+fiasco_gdt_set(l4_cap_idx_t thread, void *desc, unsigned int size,
+	       unsigned int entry_number_start, l4_utcb_t *utcb)
+{
+  l4_utcb_mr_u(utcb)->mr[0] = L4_THREAD_X86_GDT_OP;
+  l4_utcb_mr_u(utcb)->mr[1] = entry_number_start;
+  __builtin_memcpy(&l4_utcb_mr_u(utcb)->mr[2], desc, size);
+  return l4_error_u(l4_ipc_call(thread, utcb, l4_msgtag(L4_PROTO_THREAD, 2 + (size >> 2), 0, 0), L4_IPC_NEVER), utcb);
 }
 
 #endif /* ! __L4_SYS__ARCH_X86__SEGMENT_H__ */
