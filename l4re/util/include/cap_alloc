@@ -36,7 +36,7 @@ namespace L4Re { namespace Util {
  * reference-counting thread-safe capability allocator, that keeps a
  * reference counter for each managed capability selector.
  */
-extern _Cap_alloc &cap_alloc;
+extern _Cap_alloc cap_alloc;
 
 /**
  * Helper for Unique_cap and Unique_del_cap.

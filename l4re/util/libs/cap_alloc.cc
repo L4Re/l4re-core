@@ -16,32 +16,29 @@
 #include <l4/re/util/cap_alloc>
 #include <l4/re/util/debug>
 
+#define INIT_PRIO __attribute__((init_priority(INIT_PRIO_L4RE_UTIL_CAP_ALLOC)))
+
 namespace
 {
-  struct Ca
+  static constexpr unsigned Caps = CONFIG_L4RE_CAP_DFL_ALLOCATOR_MAX;
+
+  L4Re::Util::_Cap_alloc::Storage<Caps> INIT_PRIO storage;
+  L4Re::Util::Dbg INIT_PRIO dbg{0xffUL, "Cap_alloc", 0};
+
+  long get_free_caps()
   {
-    enum { Caps = CONFIG_L4RE_CAP_DFL_ALLOCATOR_MAX };
-
-    L4Re::Util::_Cap_alloc::Storage<Caps> storage;
-    L4Re::Util::Dbg _dbg;
-    L4Re::Util::_Cap_alloc alloc;
-
-    Ca()
-    : _dbg{0xffUL, "Cap_alloc", 0},
-      alloc{Caps, &storage,
-            static_cast<long>(L4Re::Env::env()->first_free_cap()), &_dbg}
-    { l4re_env()->first_free_cap += Caps; }
-  };
-
-  Ca __attribute__((init_priority(INIT_PRIO_L4RE_UTIL_CAP_ALLOC))) __cap_alloc;
+    long ret = L4Re::Env::env()->first_free_cap();
+    l4re_env()->first_free_cap += Caps;
+    return ret;
+  }
 }
 
 namespace L4Re {
   namespace Util {
-    _Cap_alloc &cap_alloc = __cap_alloc.alloc;
+    _Cap_alloc INIT_PRIO cap_alloc{Caps, &storage, get_free_caps(), &dbg};
   }
 #ifndef SHARED
-  Cap_alloc *virt_cap_alloc = &__cap_alloc.alloc;
+  Cap_alloc *virt_cap_alloc = &Util::cap_alloc;
 #else
   // defined in ldso in the case of shared libs
   extern Cap_alloc *__rtld_l4re_virt_cap_alloc __attribute__((weak));
@@ -52,7 +49,7 @@ namespace L4Re {
   setup()
   {
     if (&__rtld_l4re_virt_cap_alloc)
-      __rtld_l4re_virt_cap_alloc = &__cap_alloc.alloc;
+      __rtld_l4re_virt_cap_alloc = &L4Re::Util::cap_alloc;
   }
 #endif
 }
