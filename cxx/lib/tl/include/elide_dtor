@@ -1,0 +1,76 @@
+// vi:set ft=cpp: -*- Mode: C++ -*-
+/*
+ * Copyright (C) 2026 Kernkonzept GmbH.
+ * Author(s): Jan Klötzke <jan.kloetzke@kernkonzept.com>
+ *
+ * License: see LICENSE.spdx (in this directory or the directories above)
+ */
+
+#pragma once
+
+#include <l4/cxx/type_traits>
+#include <stddef.h>
+
+namespace cxx {
+
+/**
+ * Wrapper class to remove destructor calls.
+ *
+ * Use this class for global or static local objects that shall not be
+ * destructed. This can save some code size if the destructor of `T` is not
+ * trivial. It also prevents calls to atexit() at runtime.
+ *
+ * \attention Be careful if you use `Elide_dtor` in the global scope. Even if
+ *            `T` is trivially constructible, the  wrapper will force the
+ *            compiler to emit a static initializer!
+ */
+template< typename T >
+class Elide_dtor
+{
+private:
+  // Small helper struct so that we don't have to define a global operator new.
+  struct X : T
+  {
+    constexpr void *operator new (size_t, void *p) noexcept { return p; }
+    constexpr void operator delete (void *) {}
+
+    constexpr X() = default;
+
+    template<typename ...Args>
+    constexpr X(Args && ...a) : T(cxx::forward<Args>(a)...) {}
+
+    constexpr X(T const &o) : T(o) {}
+
+    constexpr X(T &&o) : T(cxx::move(o)) {}
+  };
+
+public:
+  template< typename ...Args >
+  explicit constexpr Elide_dtor(Args && ...args)
+  { new (_s) X(cxx::forward<Args>(args)...); }
+
+  explicit constexpr Elide_dtor(T const &o)
+  { new (_s) X(o); }
+
+  explicit constexpr Elide_dtor(T &&o)
+  { new (_s) X(cxx::move(o)); }
+
+  Elide_dtor(Elide_dtor const &) = delete;
+  Elide_dtor(Elide_dtor &&) = delete;
+
+  ~Elide_dtor() = default;
+
+        T *operator -> ()       { return get(); }
+  const T *operator -> () const { return get(); }
+
+        T *operator & ()       { return get(); }
+  const T *operator & () const { return get(); }
+
+private:
+        T *get()       { return reinterpret_cast<X       *>(_s); }
+  const T *get() const { return reinterpret_cast<X const *>(_s); }
+
+  alignas(X) char _s[sizeof(X)];
+};
+
+}

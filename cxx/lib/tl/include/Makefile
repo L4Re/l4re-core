@@ -7,6 +7,7 @@ EXTRA_TARGET := \
   avl_map     \
   bitmap      \
   dlist       \
+  elide_dtor  \
   hlist       \
   slist       \
   list        \
