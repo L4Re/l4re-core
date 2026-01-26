@@ -19,8 +19,6 @@
  */
 #pragma once
 
-#ifdef __GNUC__
-
 #include <l4/sys/compiler.h>
 
 L4_INLINE l4_msgtag_t
@@ -58,5 +56,3 @@ l4_ipc(l4_cap_idx_t dest, l4_utcb_t *utcb,
 
   return tag;
 }
-
-#endif //__GNUC__
