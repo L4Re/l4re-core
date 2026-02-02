@@ -501,7 +501,10 @@ Thread_signal_handler::call_default_action(siginfo_t const &si,
       L4::Cap<L4Re::Dbg_events> dbg_events = L4Re::Env::env()->dbg_events();
 
       if (!dbg_events.is_valid())
-        err.printf("No backtrace service available!\n");
+        {
+          err.printf("No backtrace service available!\n");
+          Global::local_rm->debug_dump(0);
+        }
       else
         {
           int r = dbg_events->request_backtrace(*regs, ra_if.obj_cap(),
