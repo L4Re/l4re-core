@@ -248,21 +248,21 @@ namespace
     bool _M_track_contention;
   };
 
-  constexpr auto __atomic_spin_count_relax = 12;
-  constexpr auto __atomic_spin_count = 16;
+  constexpr auto atomic_spin_count_relax = 12;
+  constexpr auto atomic_spin_count = 16;
 
-  // This function always returns _M_has_val == true and _M_val == *__addr.
-  // _M_timeout == (*__addr == __args._M_old).
+  // This function always returns _M_has_val == true and _M_val == *addr.
+  // _M_timeout == (*addr == args._M_old).
   __wait_result_type
-  __spin_impl(const __platform_wait_t* __addr, const __wait_args_base& __args)
+  __spin_impl(const __platform_wait_t* addr, const __wait_args_base& args)
   {
     __wait_value_type wval;
-    for (auto __i = 0; __i < __atomic_spin_count; ++__i)
+    for (auto i = 0; i < atomic_spin_count; ++i)
       {
-	wval = __atomic_load_n(__addr, __args._M_order);
-	if (wval != __args._M_old)
+	wval = __atomic_load_n(addr, args._M_order);
+	if (wval != args._M_old)
 	  return { ._M_val = wval, ._M_has_val = true, ._M_timeout = false };
-	if (__i < __atomic_spin_count_relax)
+	if (i < atomic_spin_count_relax)
 	  __thread_relax();
 	else
 	  __thread_yield();
@@ -280,8 +280,7 @@ namespace
 
   [[gnu::always_inline]]
   inline bool
-  use_proxy_wait([[maybe_unused]] const __wait_args_base& args,
-		 [[maybe_unused]] const void* /* addr */)
+  use_proxy_wait([[maybe_unused]] const __wait_args_base& args)
   {
 #ifdef _GLIBCXX_HAVE_PLATFORM_WAIT
     if constexpr (__platform_wait_uses_type<uint32_t>)
@@ -309,28 +308,42 @@ namespace
 
 } // namespace
 
-// Return false (and don't change any data members) if we can do a non-proxy
-// wait for the object of size `_M_obj_size` at address `addr`.
-// Otherwise, the object at addr needs to use a proxy wait. Set _M_wait_state,
-// set _M_obj and _M_obj_size to refer to the _M_wait_state->_M_ver proxy,
-// load the current value from _M_obj and store it in _M_old, then return true.
+// Returns true if a proxy wait will be used for addr, false otherwise.
+//
+// For the first call (from `_M_setup_wait`) `_M_obj` will equal `addr`,
+// and this function will decide whether to use a proxy wait.
+//
+// If it returns false, there are no effects (all data members are unchanged),
+// and this function should not be called again on `*this` (because calling it
+// again will just return false again, so is a waste of cycles).
+//
+// The first call that returns true does the initial setup of the proxy wait,
+// setting `_M_wait_state` to the waitable state for `addr` and setting
+// `_M_obj` and `_M_obj_size` to refer to the `_M_wait_state->_M_ver` proxy.
+// For subsequent calls (from `_M_on_wake`) the argument can be null,
+// because any value not equal to `_M_obj` has the same effect.
+// All calls that return true will load a value from `_M_obj` (i.e. the proxy)
+// and store it in `_M_old`.
 bool
 __wait_args::_M_setup_proxy_wait(const void* addr)
 {
-  if (!use_proxy_wait(*this, addr)) // We can wait on this address directly.
+  __waitable_state* state = nullptr;
+
+  if (addr == _M_obj)
     {
-      // Ensure the caller set _M_obj correctly, as that's what we'll wait on:
-      __glibcxx_assert(_M_obj == addr);
-      return false;
+      if (!use_proxy_wait(*this)) // We can wait on this address directly.
+	return false;
+
+      // This will be a proxy wait, so get a waitable state.
+      state = set_wait_state(addr, *this);
+
+      // The address we will wait on is the version count of the waitable state:
+      _M_obj = &state->_M_ver;
+      // __wait_impl and __wait_until_impl need to know this size:
+      _M_obj_size = sizeof(state->_M_ver);
     }
-
-  // This will be a proxy wait, so get a waitable state.
-  auto state = set_wait_state(addr, *this);
-
-  // The address we will wait on is the version count of the waitable state:
-  _M_obj = &state->_M_ver;
-  // __wait_impl and __wait_until_impl need to know this size:
-  _M_obj_size = sizeof(state->_M_ver);
+  else // This is not the first call to this function, already a proxy wait.
+    state = static_cast<__waitable_state*>(_M_wait_state);
 
   // Read the value of the _M_ver counter.
   _M_old = __atomic_load_n(&state->_M_ver, __ATOMIC_ACQUIRE);
@@ -378,7 +391,7 @@ __notify_impl([[maybe_unused]] const void* __addr, [[maybe_unused]] bool __all,
 	      const __wait_args_base& __args)
 {
   const bool __track_contention = __args & __wait_flags::__track_contention;
-  const bool proxy_wait = use_proxy_wait(__args, __addr);
+  const bool proxy_wait = use_proxy_wait(__args);
 
   [[maybe_unused]] auto* __wait_addr
     = static_cast<const __platform_wait_t*>(__addr);

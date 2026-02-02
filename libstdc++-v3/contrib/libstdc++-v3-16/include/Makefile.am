@@ -32,6 +32,7 @@ std_freestanding = \
 	${std_srcdir}/bit \
 	${std_srcdir}/bitset \
 	${std_srcdir}/concepts \
+	${std_srcdir}/contracts \
 	${std_srcdir}/coroutine \
 	${std_srcdir}/expected \
 	${std_srcdir}/functional \
@@ -89,6 +90,7 @@ std_headers = \
 	${std_srcdir}/locale \
 	${std_srcdir}/map \
 	${std_srcdir}/memory_resource \
+	${std_srcdir}/meta \
 	${std_srcdir}/mutex \
 	${std_srcdir}/ostream \
 	${std_srcdir}/print \
@@ -800,7 +802,6 @@ experimental_headers = \
 	${experimental_srcdir}/array \
 	${experimental_srcdir}/buffer \
 	${experimental_srcdir}/chrono \
-	${experimental_srcdir}/contract \
 	${experimental_srcdir}/deque \
 	${experimental_srcdir}/executor \
 	${experimental_srcdir}/forward_list \
