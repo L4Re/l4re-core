@@ -1896,7 +1896,11 @@ namespace __gnu_cxx
 /* #undef _GLIBCXX_USE_STDIO_PURE */
 
 /* Define if struct tm has a tm_zone member. */
-#define _GLIBCXX_USE_STRUCT_TM_TM_ZONE 1
+/* If we enable this then each time we include <chrono> we need to define
+ * _BSD_SOURCE, otherwise uclibc/include/time.h wouldn't define tm_zone
+ * which is used by <bits/chrono_io.h>.
+ * <chrono> depends on <bits/chroni_io.h> if C++20 is enabled. */
+/* #undef _GLIBCXX_USE_STRUCT_TM_TM_ZONE */
 
 /* Define if struct stat has timespec members. */
 #define _GLIBCXX_USE_ST_MTIM 1
