@@ -29,14 +29,16 @@ namespace L4Re {
  */
 class Cap_alloc
 {
-private:
-  void operator = (Cap_alloc const &);
-
-protected:
-  Cap_alloc(Cap_alloc const &) {}
-  Cap_alloc() {}
-
 public:
+  constexpr Cap_alloc() = default;
+
+  // Attention: do *not* define a destructor. We must keep the class trivially
+  // destructible so that no global destructor is created for
+  // L4Re::Util::cap_alloc.
+  // virtual ~Cap_alloc() = default;
+
+  Cap_alloc(Cap_alloc const &) = delete;
+  Cap_alloc &operator = (Cap_alloc const &) = delete;
 
   /**
    * \brief Allocate a capability
@@ -63,11 +65,6 @@ public:
                        unsigned unmap_flags = L4_FP_ALL_SPACES) noexcept = 0;
   virtual bool release(L4::Cap<void> cap, l4_cap_idx_t task = L4_INVALID_CAP,
                        unsigned unmap_flags = L4_FP_ALL_SPACES) noexcept = 0;
-
-  /**
-   * \brief Destructor.
-   */
-  virtual ~Cap_alloc() = 0;
 };
 
 template<typename ALLOC>
@@ -95,10 +92,6 @@ struct Cap_alloc_t : ALLOC, L4Re::Cap_alloc
 
   void operator delete(void *) {}
 };
-
-inline
-Cap_alloc::~Cap_alloc()
-{}
 
 extern Cap_alloc *virt_cap_alloc;
 
