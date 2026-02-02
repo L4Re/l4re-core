@@ -223,7 +223,8 @@ L4_INLINE int l4_ipc_error_code(l4_utcb_t *utcb) L4_NOTHROW;
  *                        (or returned by the l4_ipc_error_code() function).
  * \return negative error code in the range of #L4_EIPC_LO to #L4_EIPC_HI.
  */
-L4_INLINE l4_ret_t l4_ipc_to_errno(unsigned long ipc_error_code) L4_NOTHROW;
+L4_CONSTEXPR L4_INLINE l4_ret_t
+l4_ipc_to_errno(unsigned long ipc_error_code) L4_NOTHROW;
 
 
 /*****************************************************************************
@@ -560,7 +561,8 @@ l4_sndfpage_add_u(l4_fpage_t const snd_fpage, unsigned long snd_base,
  * Implementations
  **********************/
 
-L4_INLINE l4_ret_t l4_ipc_to_errno(unsigned long ipc_error_code) L4_NOTHROW
+L4_CONSTEXPR L4_INLINE l4_ret_t
+l4_ipc_to_errno(unsigned long ipc_error_code) L4_NOTHROW
 { return -(L4_EIPC_LO + ipc_error_code); }
 
 L4_INLINE l4_msgtag_t
