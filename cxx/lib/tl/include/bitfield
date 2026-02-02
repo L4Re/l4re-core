@@ -56,14 +56,11 @@ public:
     Msb = MSB,             ///< index of the MSB
   };
 
-  /// Masks for bitswise operation on internal parts of a bitfield
-  enum Masks : Base_type
-  {
-    /** Mask value to get #Bits bits. */
-    Low_mask = static_cast<Base_type>(~0ULL) >> (sizeof(Base_type)*8 - Bits),
-    /** Mask value to the bits out of a `T`. */
-    Mask     = Low_mask << Lsb,
-  };
+  /** Mask value to get #Bits bits. */
+  static constexpr Base_type Low_mask
+    = Base_type(~0ULL) >> (sizeof(Base_type) * 8 - Bits);
+  /** Mask value to the bits out of a `T`. */
+  static constexpr Base_type Mask = Low_mask << Lsb;
 
   /**
    * Type to hold at least #Bits bits.
