@@ -18,9 +18,10 @@
 
 extern "C" ssize_t write(int fd, const void *buf, size_t count)
 {
-  if (fd == 1 || fd == 2)
+  auto log = L4Re::Env::env()->log();
+  if ((fd == 1 || fd == 2) && log)
     {
-      L4Re::Env::env()->log()->printn(static_cast<const char *>(buf), count);
+      log->printn(static_cast<const char *>(buf), count);
       return count;
     }
 

@@ -65,7 +65,10 @@ namespace L4 {
     static l4_umword_t _initialized;
     if (l4util_xchg(&_initialized, 1) == 0)
       {
-        LogIOBackend *iob = new (&_iob) LogIOBackend();
+        L4::Cap<L4::Vcon> log(L4_BASE_LOG_CAP);
+        LogIOBackend *iob = log.validate().label() > 0
+                            ? new (&_iob) LogIOBackend()
+                            : nullptr;
         new (&cerr) BasicOStream(iob);
         new (&cout) BasicOStream(iob);
       }

@@ -284,7 +284,9 @@ public:
       = L4Re::Env::env()->user_factory();
 
     prog_info()->mem_alloc = user_factory.fpage();
-    prog_info()->log = L4Re::Env::env()->log().fpage();
+    prog_info()->log = L4Re::Env::env()->log().is_valid()
+                        ? L4Re::Env::env()->log().fpage()
+                        : l4_fpage_invalid();
     prog_info()->factory = L4Re::Env::env()->factory().fpage();
     prog_info()->scheduler = L4Re::Env::env()->scheduler().fpage();
     //  parser.scheduler_cap.set_fpage(&am.prog_info()->scheduler);

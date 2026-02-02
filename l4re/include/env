@@ -121,6 +121,10 @@ namespace L4Re
     { return L4::Cap<Rm>(_env.rm); }
     /**
      * Object-capability to the logging service.
+     *
+     * Might be invalid if there is no logging service available to the
+     * application!
+     *
      * \return Log object-capability
      */
     L4::Cap<Log> log() const noexcept

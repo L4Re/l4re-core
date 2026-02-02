@@ -524,7 +524,8 @@ static void init_env()
   // L4::Env::env()->log() to send logoutput to
   l4re_global_env = reinterpret_cast<l4re_env_t*>(&my_env);
   my_env.factory(L4_BASE_FACTORY_CAP);
-  my_env.log(L4_BASE_LOG_CAP);
+  L4::Cap<L4Re::Log> klog(L4_BASE_LOG_CAP);
+  my_env.log(klog.validate().label() > 0 ? klog : L4::Cap<L4Re::Log>());
   my_env.scheduler(L4_BASE_SCHEDULER_CAP);
 }
 

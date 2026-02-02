@@ -83,7 +83,10 @@ public:
     env->parent(L4::Cap<L4Re::Parent>(Caps::Parent_cap << L4_CAP_SHIFT));
     env->scheduler(L4::Cap<L4::Scheduler>(Caps::Scheduler_cap << L4_CAP_SHIFT));
     env->rm(L4::Cap<L4Re::Rm>(Caps::External_rm_cap << L4_CAP_SHIFT));
-    env->log(L4::Cap<L4Re::Log>(Caps::Log_cap << L4_CAP_SHIFT));
+    if (l4_is_fpage_valid(this->_info.log))
+      env->log(L4::Cap<L4Re::Log>(Caps::Log_cap << L4_CAP_SHIFT));
+    else
+      env->log(L4::Cap<L4Re::Log>());
     env->main_thread(L4::Cap<L4::Thread>(Caps::Rm_thread_cap << L4_CAP_SHIFT));
     env->factory(L4::Cap<L4::Factory>(Caps::Factory_cap << L4_CAP_SHIFT));
     env->itas(L4::Cap<L4Re::Itas>{});
@@ -177,8 +180,9 @@ public:
 	  env->scheduler().snd_base()));
     chksys(_ntask->map(L4Re::This_task, this->_info.parent,
 	  env->parent().snd_base()));
-    chksys(_ntask->map(L4Re::This_task, this->_info.log,
-	  env->log().snd_base()));
+    if (l4_is_fpage_valid(this->_info.log))
+      chksys(_ntask->map(L4Re::This_task, this->_info.log,
+            env->log().snd_base()));
     chksys(_ntask->map(L4Re::This_task, this->_info.rm,
 	  env->rm().snd_base()));
     chksys(_ntask->map(L4Re::This_task, this->_info.mem_alloc,

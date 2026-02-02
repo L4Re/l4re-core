@@ -69,12 +69,16 @@ Fd_store::Fd_store() noexcept
   // use this strange way to prevent deletion of the stdio object
   // this depends on Fd_store to being a singleton !!!
   static char m[sizeof(Std_stream)] __attribute__((aligned(sizeof(long))));
-  Std_stream *s = new (m) Std_stream(L4Re::Env::env()->log());
-  // make sure that we never delete the static io stream thing
-  s->add_ref();
-  set(0, cxx::ref_ptr(s)); // stdin
-  set(1, cxx::ref_ptr(s)); // stdout
-  set(2, cxx::ref_ptr(s)); // stderr
+  if (auto log = L4Re::Env::env()->log())
+    {
+      Std_stream *s = new (m) Std_stream(log);
+      set(0, cxx::ref_ptr(s)); // stdin
+      set(1, cxx::ref_ptr(s)); // stdout
+      set(2, cxx::ref_ptr(s)); // stderr
+
+      // make sure that we never delete the static io stream thing
+      s->add_ref();
+    }
 }
 
 class Root_mount_tree : public L4Re::Vfs::Mount_tree

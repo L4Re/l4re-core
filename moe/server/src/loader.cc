@@ -257,7 +257,10 @@ Moe_app_model::init_prog()
 
   Allocator *allocator = Allocator::root_allocator();
   _info.mem_alloc = allocator->obj_cap().fpage();
-  _info.log = L4Re::Env::env()->log().fpage();
+  if (auto log = L4Re::Env::env()->log())
+    _info.log = log.fpage();
+  else
+    _info.log = l4_fpage_invalid();
   _info.factory = L4Re::Env::env()->factory().fpage();
   _info.scheduler = L4Re::Env::env()->scheduler().fpage();
 
