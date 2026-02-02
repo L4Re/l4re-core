@@ -42,7 +42,7 @@ static __inline__ int timedsuspend(pthread_descr self,
   l4_timeout_t timeout = L4_IPC_NEVER;
   l4_rcv_timeout(l4_timeout_abs_u(clock, 4, l4_utcb()), &timeout);
   l4_msgtag_t res = l4_semaphore_down(self->p_thsem_cap, timeout);
-  if (l4_error(res) == -(L4_EIPC_LO + L4_IPC_RETIMEOUT))
+  if (l4_error(res) == l4_ipc_to_errno(L4_IPC_RETIMEOUT))
     return 0;
   return 1;
 }
