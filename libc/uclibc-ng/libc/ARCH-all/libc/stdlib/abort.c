@@ -27,6 +27,7 @@ not, see <http://www.gnu.org/licenses/>.  */
 
 
 
+#ifdef __UCLIBC_HAS_STDIO_SHUTDOWN_ON_ABORT__
 /* Defeat compiler optimization which assumes function addresses are never NULL */
 static __always_inline int not_null_ptr(const void *p)
 {
@@ -37,6 +38,7 @@ static __always_inline int not_null_ptr(const void *p)
 	);
 	return q != 0;
 }
+#endif
 
 /* Our last ditch effort to commit suicide */
 #ifdef __UCLIBC_ABORT_INSTRUCTION__
