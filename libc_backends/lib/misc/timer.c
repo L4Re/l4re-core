@@ -13,7 +13,7 @@ int timer_delete(timer_t timer_id)
 {
   printf("Unimplemented: %s(timer_id)\n", __func__);
   (void)timer_id;
-  errno = -EINVAL;
+  errno = EINVAL;
   return -1;
 }
 
@@ -22,7 +22,7 @@ int timer_gettime(timer_t timer_id, struct itimerspec *setting)
   printf("Unimplemented: %s(timer_id)\n", __func__);
   (void)timer_id;
   (void)setting;
-  errno = -EINVAL;
+  errno = EINVAL;
   return -1;
 }
 
@@ -35,7 +35,7 @@ int timer_settime(timer_t timer_id, int __flags,
   (void)__value;
   (void)__ovalue;
   (void)__flags;
-  errno = -EINVAL;
+  errno = EINVAL;
   return -1;
 }
 
@@ -47,6 +47,6 @@ int timer_create (clockid_t __clock_id,
   (void)__clock_id;
   (void)__evp;
   (void)__timerid;
-  errno = -EINVAL;
+  errno = EINVAL;
   return -1;
 }

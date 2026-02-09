@@ -12,6 +12,6 @@
 int daemon(int nochdir, int noclose)
 {
   printf("Unimplemented: daemon(%d, %d)\n", nochdir, noclose);
-  errno = -ENOMEM;
+  errno = ENOMEM;
   return -1;
 }

@@ -28,7 +28,7 @@ noexcept(noexcept(signal(signum, handler)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return SIG_ERR;
     }
 
@@ -71,7 +71,7 @@ noexcept(noexcept(sigaction(signum, act, oldact)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -94,7 +94,7 @@ noexcept(noexcept(sigprocmask(how, set, oldset)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -116,7 +116,7 @@ noexcept(noexcept(sigpending(set)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -182,7 +182,7 @@ noexcept(noexcept(setitimer(which, new_val, old_val)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -202,7 +202,7 @@ noexcept(noexcept(getitimer(which, value)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -220,7 +220,7 @@ noexcept(noexcept(sigaltstack(ss, oss)))
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 
@@ -243,7 +243,7 @@ int l4re_raise(int sig)
   auto itas = L4Re::Env::env()->itas();
   if (!itas)
     {
-      errno = -ENOSYS;
+      errno = ENOSYS;
       return -1;
     }
 

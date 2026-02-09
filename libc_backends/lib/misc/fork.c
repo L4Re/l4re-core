@@ -12,13 +12,13 @@
 pid_t fork(void)
 {
   printf("Unimplemented: fork()\n");
-  errno = -ENOMEM;
+  errno = ENOMEM;
   return -1;
 }
 
 pid_t vfork(void)
 {
   printf("Unimplemented: vfork()\n");
-  errno = -ENOMEM;
+  errno = ENOMEM;
   return -1;
 }
