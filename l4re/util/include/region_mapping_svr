@@ -23,6 +23,7 @@ struct Rm_server
 private:
   DERIVED *rm() { return static_cast<DERIVED*>(this); }
   DERIVED const *rm() const { return static_cast<DERIVED const *>(this); }
+  L4::Cap<L4::Task> dst_task() { return static_cast<DERIVED *>(this)->get_dst(); }
 
 public:
 
@@ -54,7 +55,8 @@ public:
     Rm::Region_flags r_flags = flags.region_flags();
     Rm::Attach_flags a_flags = flags.attach_flags();
 
-    typename DERIVED::Region_handler handler(ds, client_cap_idx, offs, r_flags);
+    typename DERIVED::Region_handler handler(ds, client_cap_idx, dst_task(),
+                                             offs, r_flags);
     start = l4_addr_t(rm()->attach(reinterpret_cast<void*>(start), size,
                                    handler, a_flags, align,
                                    name.data,
@@ -270,7 +272,7 @@ public:
         return -L4_ENODEV;
       }
 
-    typename DERIVED::Region_handler::Ops::Map_result map_res;
+    typename DERIVED::Region_handler::Map_result map_res;
     if (int err = n->second.map(addr, n->first, need_w, &map_res))
       {
         Dbg(Dbg::Warn, "rm").printf("mapping for page fault failed with error %d at 0x%lx pc=0x%lx\n",

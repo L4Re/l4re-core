@@ -29,6 +29,7 @@ public:
   typedef L4::Ipc::Snd_fpage Map_result;
   static l4_ret_t map(Region_handler const *h, l4_addr_t adr,
                       L4Re::Util::Region const &r, bool writable,
+                      L4::Cap<L4::Task> dst,
                       L4::Ipc::Snd_fpage *result);
   static void free(Region_handler const *h, l4_addr_t start, unsigned long size);
   static l4_ret_t map_info(Region_handler const *h,

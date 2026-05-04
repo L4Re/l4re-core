@@ -310,6 +310,7 @@ bool Loader::start(L4::Cap<L4Re::Dataspace> bin, l4re_aux_t *aux)
     = Global::local_rm->attach(vma_start, Loader_stack_size,
                                Region_handler(__loader_stack,
                                               __loader_stack.cap(),
+                                              L4::Cap<L4::Task>::Invalid,
                                               0, L4Re::Rm::F::RW),
                                L4Re::Rm::F::Search_addr, L4_PAGESHIFT,
                                "[loader-stack]", strlen("[loader-stack]"));

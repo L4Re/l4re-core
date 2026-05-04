@@ -86,18 +86,20 @@ private:
   DS _mem;
   l4_cap_idx_t _client_cap = L4_INVALID_CAP;
   L4Re::Rm::Region_flags _flags;
+  L4::Cap<L4::Task> _dst_cap;
 
 public:
   typedef DS Dataspace;
-  typedef OPS Ops;
   typedef typename OPS::Map_result Map_result;
 
   Region_handler() noexcept : _offs(0), _mem(), _flags() {}
 
   Region_handler(Dataspace const &mem, l4_cap_idx_t client_cap,
+      L4::Cap<L4::Task> dst,
       L4Re::Rm::Offset offset = 0,
       L4Re::Rm::Region_flags flags = L4Re::Rm::Region_flags(0)) noexcept
-    : _offs(offset), _mem(mem), _client_cap(client_cap), _flags(flags)
+    : _offs(offset), _mem(mem), _client_cap(client_cap), _flags(flags),
+      _dst_cap(dst.cap())
   {}
 
   Dataspace const &memory() const noexcept
@@ -122,14 +124,20 @@ public:
   { Region_handler n = *this; n._offs += offset; return n; }
 
   void free(l4_addr_t start, unsigned long size) const noexcept
-  { Ops::free(this, start, size); }
+  {
+    OPS::free(this, start, size);
+  }
 
   int map(l4_addr_t addr, Region const &r, bool writable,
           Map_result *result) const
-  { return Ops::map(this, addr, r, writable, result); }
+  {
+    return OPS::map(this, addr, r, writable, _dst_cap, result);
+  }
 
   int map_info(l4_addr_t *start_addr, l4_addr_t *end_addr) const
-  { return Ops::map_info(this, start_addr, end_addr); }
+  {
+    return OPS::map_info(this, start_addr, end_addr);
+  }
 };
 
 template<typename Hdlr, template<typename T> class Alloc>
@@ -144,6 +152,10 @@ protected:
 private:
   l4_addr_t _start;
   l4_addr_t _end;
+
+  // Cap to task for that this RM should map memory. Defaults to invalid cap
+  // (== mapping for this task)
+  L4::Cap<L4::Task> _dst_cap;
 
 protected:
   void set_limits(l4_addr_t start, l4_addr_t end) noexcept
@@ -177,7 +189,33 @@ public:
   l4_addr_t min_addr() const noexcept { return _start; }
   l4_addr_t max_addr() const noexcept { return _end; }
 
-  Region_map(l4_addr_t start, l4_addr_t end) noexcept : _start(start), _end(end) {}
+  L4::Cap<L4::Task> get_dst() const noexcept { return _dst_cap; }
+
+
+  /**
+   * Construct a new Region map.
+   *
+   * \param start Lower bound of virtual address range managed by this map (?)
+   * \param end   Upper bound of virtual address range managed by this map (?)
+   * \param dst   Task for that this region map is used.
+   */
+  Region_map(l4_addr_t start, l4_addr_t end, L4::Cap<L4::Task> dst) noexcept :
+            _start(start),
+            _end(end),
+            _dst_cap(dst.cap()) {}
+
+  /**
+   * Construct a new Region map. This constructor sets the destination task to
+   * an invalid cap, meaning that this region map manages an address range in
+   * the local task.
+   *
+   * \param start Lower bound of virtual address range managed by this map (?)
+   * \param end   Upper bound of virtual address range managed by this map (?)
+   */
+  Region_map(l4_addr_t start, l4_addr_t end) noexcept :
+            _start(start),
+            _end(end),
+            _dst_cap(L4_INVALID_CAP) {}
 
   Node find(Key_type const &key) const noexcept
   {
@@ -243,7 +281,7 @@ public:
         addr = r->first.end() + 1;
       }
 
-    if (_am.insert(c, Hdlr(typename Hdlr::Dataspace(), 0, 0, flags.region_flags())).second == 0)
+    if (_am.insert(c, Hdlr(typename Hdlr::Dataspace(), 0, _dst_cap, 0, flags.region_flags())).second == 0)
       return addr;
 
     return L4_INVALID_ADDR;

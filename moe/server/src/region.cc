@@ -38,6 +38,7 @@ Region_map::Region_map()
 
 l4_ret_t Region_ops::map(Region_handler const *h, l4_addr_t adr,
                          L4Re::Util::Region const &r, bool need_w,
+                         L4::Cap<L4::Task> /* dst */,
                          L4::Ipc::Snd_fpage *result)
 {
   if (!h->memory())
