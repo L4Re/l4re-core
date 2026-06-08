@@ -275,10 +275,13 @@ l4_ipc_send(l4_cap_idx_t dest, l4_utcb_t *utcb, l4_msgtag_t tag,
  * Wait for an incoming message from any possible sender.
  * \ingroup l4_ipc_api
  *
+ * \param      reply_cap  Reply capability selector. A value of #L4_INVALID_CAP
+ *                        denotes the implicit reply capability of the current
+ *                        thread.
  * \utcb{utcb}
- * \param[out] label    Label assigned to the source object (IPC gate or IRQ).
- * \param      timeout  Timeout pair (see #l4_timeout_t, only the receive part
- *                      is used).
+ * \param[out] label      Label assigned to the source object (IPC gate or IRQ).
+ * \param      timeout    Timeout pair (see #l4_timeout_t, only the receive part
+ *                        is used).
  *
  * \return  return tag
  *
@@ -296,6 +299,16 @@ l4_ipc_send(l4_cap_idx_t dest, l4_utcb_t *utcb, l4_msgtag_t tag,
  *       priority. In this respect, IRQ sources have the highest priority 255.
  *
  * \see \ref l4re_concepts_ipc
+ */
+L4_INLINE l4_msgtag_t
+l4_ipc_wait_ext(l4_cap_idx_t reply_cap,
+                l4_utcb_t *utcb, l4_umword_t *label,
+                l4_timeout_t timeout) L4_NOTHROW;
+
+/**
+ * Same as l4_ipc_wait_ext() with `reply_cap` set to #L4_INVALID_CAP to specify
+ * the implicit reply capability.
+ * \ingroup l4_ipc_api
  */
 L4_INLINE l4_msgtag_t
 l4_ipc_wait(l4_utcb_t *utcb, l4_umword_t *label,
@@ -372,7 +385,7 @@ l4_ipc_call(l4_cap_idx_t object, l4_utcb_t *utcb, l4_msgtag_t tag,
  *
  * \param reply_cap Reply capability selector. A value of #L4_INVALID_CAP
  *                  denotes the implicit reply capability of the current
- *                  thread. Otherwise, use an explicit reply capability.
+ *                  thread.
  * \utcb{utcb}
  * \param tag       Describes the message to be sent as reply.
  * \param timeout   Timeout pair (see #l4_timeout_t).
@@ -393,11 +406,14 @@ l4_ipc_reply(l4_cap_idx_t reply_cap, l4_utcb_t *utcb, l4_msgtag_t tag,
  * Reply and wait operation (uses the *reply* capability).
  * \ingroup l4_ipc_api
  *
+ * \param      reply_cap  Reply capability selector. A value of #L4_INVALID_CAP
+ *                        denotes the implicit reply capability of the current
+ *                        thread.
  * \utcb{utcb}
- * \param      tag      Describes the message to be sent as reply.
- * \param[out] label    Label assigned to the source object of the received
- *                      message.
- * \param      timeout  Timeout pair (see #l4_timeout_t).
+ * \param      tag        Describes the message to be sent as reply.
+ * \param[out] label      Label assigned to the source object of the received
+ *                        message.
+ * \param      timeout    Timeout pair (see #l4_timeout_t).
  *
  * \return  result tag
  *
@@ -413,6 +429,17 @@ l4_ipc_reply(l4_cap_idx_t reply_cap, l4_utcb_t *utcb, l4_msgtag_t tag,
  *       priority. In this respect, IRQ sources have the highest priority 255.
  *
  * \see \ref l4re_concepts_ipc
+ */
+L4_INLINE l4_msgtag_t
+l4_ipc_reply_and_wait_ext(l4_cap_idx_t reply_cap,
+                          l4_utcb_t *utcb, l4_msgtag_t tag,
+                          l4_umword_t *label,
+                          l4_timeout_t timeout) L4_NOTHROW;
+
+/**
+ * Same as l4_ipc_reply_and_wait_ext() with `reply_cap` set to #L4_INVALID_CAP
+ * to specify the implicit reply capability.
+ * \ingroup l4_ipc_api
  */
 L4_INLINE l4_msgtag_t
 l4_ipc_reply_and_wait(l4_utcb_t *utcb, l4_msgtag_t tag,
@@ -610,10 +637,19 @@ l4_ipc_reply(l4_cap_idx_t reply_cap, l4_utcb_t *utcb, l4_msgtag_t tag,
 }
 
 L4_INLINE l4_msgtag_t
+l4_ipc_reply_and_wait_ext(l4_cap_idx_t reply_cap,
+                          l4_utcb_t *utcb,
+                          l4_msgtag_t tag, l4_umword_t *label,
+                          l4_timeout_t timeout) L4_NOTHROW
+{
+  return l4_ipc(reply_cap, utcb, L4_SYSF_REPLY_AND_WAIT, 0, tag, label, timeout);
+}
+
+L4_INLINE l4_msgtag_t
 l4_ipc_reply_and_wait(l4_utcb_t *utcb, l4_msgtag_t tag,
                       l4_umword_t *label, l4_timeout_t timeout) L4_NOTHROW
 {
-  return l4_ipc(L4_INVALID_CAP, utcb, L4_SYSF_REPLY_AND_WAIT, 0, tag, label, timeout);
+  return l4_ipc_reply_and_wait_ext(L4_INVALID_CAP, utcb, tag, label, timeout);
 }
 
 L4_INLINE l4_msgtag_t
@@ -631,12 +667,19 @@ l4_ipc_send(l4_cap_idx_t dest, l4_utcb_t *utcb, l4_msgtag_t tag,
 }
 
 L4_INLINE l4_msgtag_t
-l4_ipc_wait(l4_utcb_t *utcb, l4_umword_t *label,
-            l4_timeout_t timeout) L4_NOTHROW
+l4_ipc_wait_ext(l4_cap_idx_t reply_cap, l4_utcb_t *utcb, l4_umword_t *label,
+                l4_timeout_t timeout) L4_NOTHROW
 {
   l4_msgtag_t t;
   t.raw = 0;
-  return l4_ipc(L4_INVALID_CAP, utcb, L4_SYSF_WAIT, 0, t, label, timeout);
+  return l4_ipc(reply_cap, utcb, L4_SYSF_WAIT, 0, t, label, timeout);
+}
+
+L4_INLINE l4_msgtag_t
+l4_ipc_wait(l4_utcb_t *utcb, l4_umword_t *label,
+            l4_timeout_t timeout) L4_NOTHROW
+{
+  return l4_ipc_wait_ext(L4_INVALID_CAP, utcb, label, timeout);
 }
 
 L4_INLINE l4_msgtag_t
