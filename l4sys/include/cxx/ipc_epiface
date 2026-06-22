@@ -164,11 +164,17 @@ public:
 
   /**
    * \brief Allocate a new capability for the given receive buffer.
+   *
    * \param index  The receive buffer index of the expected capability
    *               argument (0 <= \c index < \c caps registered with
    *               alloc_buffer_demand()).
    * \pre 0 <= \c index < \c caps registered with alloc_buffer_demand()
    * \return 0 on success, < 0 on error.
+   *
+   * On success, the caller implicitly takes ownership of the former
+   * [rcv_cap](#rcv_cap)(`index`) prior to the call. On error,
+   * [rcv_cap](#rcv_cap)(`index`) remains unchanged and will be reused for the
+   * next IPC receive of the server.
    */
   virtual int realloc_rcv_cap(int index) = 0;
 
