@@ -56,6 +56,7 @@ enum L4_msgtag_protocol
   L4_PROTO_ALLOW_SYSCALL = 1,   ///< Allow an alien the system call
   L4_PROTO_PF_EXCEPTION  = 1,   ///< Make an exception out of a page fault
 
+  L4_PROTO_PLATFORM_CTL  =   0L, ///< Platform control
   L4_PROTO_IRQ           =  -1L, ///< IRQ message
   L4_PROTO_PAGE_FAULT    =  -2L, ///< Page fault message
   // -3L unused

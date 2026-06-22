@@ -167,20 +167,6 @@ enum L4_platform_ctl_ops
   L4_PLATFORM_CTL_SET_TASK_ASID_OP      = 0x10UL, /**< Arm: set task ASID */
 };
 
-/**
- * Predefined protocol type for messages to platform-control objects.
- * \ingroup l4_msgtag_api
- */
-enum L4_platform_ctl_proto
-{
-  /**
-   * Protocol messages to a platform control object.
-   *
-   * See #L4_platform_ctl_ops for allowed operations.
-   */
-  L4_PROTO_PLATFORM_CTL = 0
-};
-
 /* IMPLEMENTATION -----------------------------------------------------------*/
 
 #include <l4/sys/ipc.h>
