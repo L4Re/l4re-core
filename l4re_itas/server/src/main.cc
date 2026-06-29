@@ -88,13 +88,13 @@ static void insert_regions()
 
   int n;
   l4_addr_t addr = 0;
-  Rm::Region const *rl;
-  while ((n = L4Re::Env::env()->rm()->get_regions(addr, &rl)) > 0)
+  L4::Ipc::Array_ref<Rm::Region> rl;
+  while ((n = L4Re::Env::env()->rm()->get_regions(addr, rl)) > 0)
     {
       assert(sizeof(regions_areas) >= n * sizeof(Rm::Region));
       assert(n <= Max_num_regions);
       // Copy out of UTCB
-      memcpy(regions_areas.r, rl, n * sizeof(Rm::Region));
+      memcpy(regions_areas.r, rl.data, n * sizeof(Rm::Region));
 
       for (int i = 0; i < n; ++i)
         {
@@ -131,13 +131,13 @@ static void insert_regions()
     }
 
   addr = 0;
-  Rm::Area const *al;
-  while ((n = L4Re::Env::env()->rm()->get_areas(addr, &al)) > 0)
+  L4::Ipc::Array_ref<Rm::Area> al;
+  while ((n = L4Re::Env::env()->rm()->get_areas(addr, al)) > 0)
     {
       assert(sizeof(regions_areas) >= n * sizeof(Rm::Area));
       assert(n <= Max_num_areas);
       // Copy out of UTCB
-      memcpy(regions_areas.a, al, n * sizeof(Rm::Area));
+      memcpy(regions_areas.a, al.data, n * sizeof(Rm::Area));
 
       for (int i = 0; i < n; ++i)
         {

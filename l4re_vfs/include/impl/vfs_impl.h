@@ -444,14 +444,14 @@ Vfs::munmap(void *start, size_t len) L4_NOTHROW
 
   // Fields for obtaining a list of areas for the calling process
   long area_cnt = -1;           // No. of areas in this process
-  Rm::Area const *area_array;
+  L4::Ipc::Array_ref<Rm::Area> areas_in_utcb;
   bool matches_area = false;        // true if unmap parameters match an area
 
   // First check if there are any areas matching the munmap request. Those
   // might have been created by an mmap call using PROT_NONE as protection
   // modifier.
 
-  area_cnt = r->get_areas((l4_addr_t) start, &area_array);
+  area_cnt = r->get_areas((l4_addr_t) start, areas_in_utcb);
 
   // It is enough to check for the very first entry, since get_areas will
   // only return areas with a starting address equal or greater to <start>.
@@ -459,10 +459,11 @@ Vfs::munmap(void *start, size_t len) L4_NOTHROW
   // <start>.
   if (area_cnt > 0)
     {
-      size_t area_size = area_array[0].end - area_array[0].start + 1;
+      Rm::Area const &first_area = areas_in_utcb.data[0];
+      size_t area_size = first_area.end - first_area.start + 1;
 
       // Only free the area if the munmap parameters describe it exactly.
-      if (area_array[0].start == (l4_addr_t) start && area_size == len)
+      if (first_area.start == (l4_addr_t) start && area_size == len)
         {
           r->free_area((l4_addr_t) start);
           matches_area = true;

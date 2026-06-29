@@ -21,7 +21,7 @@
 #include <l4/re/protocols.h>
 #include <l4/sys/pager>
 #include <l4/sys/cxx/ipc_iface>
-#include <l4/sys/cxx/ipc_ret_array>
+#include <l4/sys/cxx/ipc_array>
 #include <l4/sys/cxx/types>
 #include <l4/re/consts>
 #include <l4/re/dataspace>
@@ -716,7 +716,7 @@ public:
    *       shall use the function repeatedly with a start address one larger
    *       that the end address of the last region from the previous call.
    */
-  L4_RPC(l4_ret_t, get_regions, (l4_addr_t start, L4::Ipc::Ret_array<Region> regions));
+  L4_RPC(l4_ret_t, get_regions, (l4_addr_t start, L4::Ipc::Array_ref<Region> &regions));
 
   /**
    * Return the list of areas whose starting addresses are higher or equal to
@@ -732,7 +732,7 @@ public:
    *       shall use the function repeatedly with a start address one larger
    *       than the end address of the last area from the previous call.
    */
-  L4_RPC(long, get_areas, (l4_addr_t start, L4::Ipc::Ret_array<Area> areas));
+  L4_RPC(long, get_areas, (l4_addr_t start, L4::Ipc::Array_ref<Area> &areas));
 
   /**
    * Return auxiliary information of a region. This is a debugging feature

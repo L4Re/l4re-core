@@ -334,14 +334,14 @@ public:
   }
 
   long op_get_regions(L4Re::Rm::Rights rights, l4_addr_t addr,
-                      L4::Ipc::Ret_array<L4Re::Rm::Region> regions)
+                      L4::Ipc::Array_ref<L4Re::Rm::Region> &regions)
   {
     Rw_lock_read_scope scope(_lock);
     return _region_map.op_get_regions(rights, addr, regions);
   }
 
   long op_get_areas(L4Re::Rm::Rights rights, l4_addr_t addr,
-                    L4::Ipc::Ret_array<L4Re::Rm::Area> areas)
+                    L4::Ipc::Array_ref<L4Re::Rm::Area> &areas)
   {
     Rw_lock_read_scope scope(_lock);
     return _region_map.op_get_areas(rights, addr, areas);

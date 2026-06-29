@@ -201,43 +201,48 @@ public:
    * Implementation of L4Re::Rm::get_regions
    */
   l4_ret_t op_get_regions(L4Re::Rm::Rights, l4_addr_t addr,
-                          L4::Ipc::Ret_array<L4Re::Rm::Region> regions)
+                          L4::Ipc::Array_ref<L4Re::Rm::Region> &regions)
   {
     typename DERIVED::Node r;
-    unsigned num = 0;
+    unsigned limit = regions.length;
+
+    regions.length = 0;
     while ((r = rm()->lower_bound(Region(addr))))
       {
-        Rm::Region &x = regions.value[num];
+        Rm::Region &x = regions.data[regions.length];
         x.start  = r->first.start();
         x.end    = r->first.end();
         x.flags  = r->second.flags();
 
-        if (++num >= regions.max)
+        if (++regions.length >= limit)
           break;
 
         if (x.end >= rm()->max_addr())
           break;
         addr = x.end + 1;
       }
-    return num;
+
+    return regions.length;
   }
 
   /**
    * Implementation of L4Re::Rm::get_areas
    */
   l4_ret_t op_get_areas(L4Re::Rm::Rights, l4_addr_t addr,
-                        L4::Ipc::Ret_array<L4Re::Rm::Area> areas)
+                        L4::Ipc::Array_ref<L4Re::Rm::Area> &areas)
   {
     typename DERIVED::Node r;
-    unsigned num = 0;
+    unsigned limit = areas.length;
+
+    areas.length = 0;
     while ((r = rm()->lower_bound_area(Region(addr))))
       {
-        Rm::Area &x = areas.value[num];
+        Rm::Area &x = areas.data[areas.length];
         x.start  = r->first.start();
         x.end    = r->first.end();
         x.flags  = r->second.flags();
 
-        if (++num >= areas.max)
+        if (++areas.length >= limit)
           break;
 
         if (x.end >= rm()->max_addr())
@@ -246,7 +251,7 @@ public:
         addr = x.end + 1;
       }
 
-    return num;
+    return areas.length;
   }
 
   /**
