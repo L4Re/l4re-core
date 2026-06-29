@@ -9,12 +9,12 @@
 #include "globals.h"
 #include "region.h"
 #include "remote_access.h"
+#include "safe_memcpy.h"
 
 Remote_access ra_if;
 
 static l4_addr_t last_pfn = ~0ul;
 
-// This is an intermediate solution, to be improved.
 static l4_ret_t pagein(l4_addr_t addr, bool with_write, bool with_exec)
 {
   if (l4_trunc_page(addr) != last_pfn)
@@ -49,22 +49,45 @@ static l4_ret_t pagein(l4_addr_t addr, bool with_write, bool with_exec)
 l4_ret_t Remote_access::op_read_mem(L4Re::Remote_access::Rights,
                                     l4_addr_t addr, char width, l4_uint64_t &val)
 {
-  if (l4_ret_t r = pagein(addr, 0, 0))
-    return r;
+  bool smr;
 
-  switch (width)
+  do
     {
-    case L4Re::Remote_access::Wd_8bit:
-      val = *reinterpret_cast<l4_uint8_t  *>(addr); break;
-    case L4Re::Remote_access::Wd_16bit:
-      val = *reinterpret_cast<l4_uint16_t *>(addr); break;
-    case L4Re::Remote_access::Wd_32bit:
-      val = *reinterpret_cast<l4_uint32_t *>(addr); break;
-    case L4Re::Remote_access::Wd_64bit:
-      val = *reinterpret_cast<l4_uint64_t *>(addr); break;
-    default:
-      return -L4_EINVAL;
-    };
+      switch (width)
+        {
+        case L4Re::Remote_access::Wd_8bit:
+            {
+              l4_uint8_t v = 0;
+              smr = safe_memcpy(&v, reinterpret_cast<char const *>(addr), 1);
+              val = v;
+            }
+          break;
+        case L4Re::Remote_access::Wd_16bit:
+            {
+              l4_uint16_t v = 0;
+              smr = safe_memcpy(&v, reinterpret_cast<char const *>(addr), 2);
+              val = v;
+            }
+          break;
+        case L4Re::Remote_access::Wd_32bit:
+            {
+              l4_uint32_t v = 0;
+              smr = safe_memcpy(&v, reinterpret_cast<char const *>(addr), 4);
+              val = v;
+            }
+          break;
+        case L4Re::Remote_access::Wd_64bit:
+          smr = safe_memcpy(&val, reinterpret_cast<char const *>(addr), 8);
+          break;
+        default:
+          return -L4_EINVAL;
+        };
+
+      if (!smr)
+        if (l4_ret_t r = pagein(addr, 0, 0))
+          return r;
+    }
+  while (!smr);
 
   return 0;
 }
