@@ -21,7 +21,6 @@ EXTRA_TARGET	+= capability kip task factory irq icu thread vcon \
                    cxx/ipc_client      \
                    cxx/ipc_epiface     \
                    cxx/ipc_iface       \
-                   cxx/ipc_ret_array   \
                    cxx/ipc_string      \
                    cxx/ipc_server      \
                    cxx/ipc_server_loop \
