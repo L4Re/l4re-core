@@ -436,7 +436,9 @@ template<> struct Elem<Varg const *>
   using arg_type = Varg const *;
   using svr_type = Varg_list_ref;
   using svr_arg_type = Varg_list_ref;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = true;
+  static constexpr bool Is_output = false;
 };
 
 template<> struct Is_valid_rpc_type<Varg> : L4::Types::False {};
@@ -444,19 +446,12 @@ template<> struct Is_valid_rpc_type<Varg *> : L4::Types::False {};
 template<> struct Is_valid_rpc_type<Varg &> : L4::Types::False {};
 template<> struct Is_valid_rpc_type<Varg const &> : L4::Types::False {};
 
-template<> struct Direction<Varg const *> : Dir_in {};
-template<> struct Class<Varg const *> : Cls_data {};
-
-template<typename DIR, typename CLASS>
-struct Clnt_val_ops<Varg, DIR, CLASS>;
-
 template<>
-struct Clnt_val_ops<Varg, Dir_in, Cls_data> :
+struct Clnt_val_ops<Varg> :
   Clnt_noops<Varg const &>
 {
-  using Clnt_noops<Varg const &>::to_msg;
-  static int to_msg(char *msg, unsigned offs, unsigned limit,
-                    Varg const &a, Dir_in, Cls_data)
+  static int to_msg_data(char *msg, unsigned offs, unsigned limit,
+                         Varg const &a)
   {
     for (Varg const *i = &a; i->tag(); ++i)
       {
@@ -477,12 +472,11 @@ struct Clnt_val_ops<Varg, Dir_in, Cls_data> :
 };
 
 template<>
-struct Svr_val_ops<Varg_list_ref, Dir_in, Cls_data> :
+struct Svr_val_ops<Varg_list_ref> :
   Svr_noops<Varg_list_ref>
 {
-  using Svr_noops<Varg_list_ref>::to_svr;
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    Varg_list_ref &a, Dir_in, Cls_data)
+  static int to_svr_data(char *msg, unsigned offset, unsigned limit,
+                         Varg_list_ref &a)
   {
     unsigned start = align_to<l4_umword_t>(offset);
     unsigned offs;

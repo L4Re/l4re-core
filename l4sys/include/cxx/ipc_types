@@ -48,20 +48,11 @@ template<typename T> struct  L4_EXPORT In_out
 };
 
 namespace Msg {
-template<typename A> struct Elem< In_out<A *> > : Elem<A *> {};
 
-template<typename A>
-struct Svr_xmit< In_out<A *> > : Svr_xmit<A *>, Svr_xmit<A const *>
+template<typename A> struct Elem< In_out<A *> > : Elem<A *>
 {
-  using Svr_xmit<A *>::from_svr;
-  using Svr_xmit<A const *>::to_svr;
-};
-
-template<typename A>
-struct Clnt_xmit< In_out<A *> > : Clnt_xmit<A *>, Clnt_xmit<A const *>
-{
-  using Clnt_xmit<A *>::from_msg;
-  using Clnt_xmit<A const *>::to_msg;
+  static constexpr bool Is_input = true;
+  static constexpr bool Is_output = true;
 };
 
 template<typename A>
@@ -81,14 +72,18 @@ struct Is_valid_rpc_type< In_out<A> > : L4::Types::False {};
 
 /**
  * Attribute for defining an optional RPC argument.
+ *
+ * \attention Do not use in new code. It is solely used for the implementation
+ *            of some legacy message formats and should generally not be needed
+ *            for the definition of ordinary interfaces.
  */
 template<typename T> struct L4_EXPORT Opt
 {
-  T _value;    ///< The value
-  bool _valid; ///< True if the optional argument is present, false else
+  T _value{};          ///< The value
+  bool _valid = false; ///< True if the optional argument is present, false else
 
   /// Make an absent optional argument
-  Opt() noexcept : _valid(false) {}
+  Opt() noexcept = default;
 
   /// Make a present optional argument with the given value
   Opt(T value) noexcept : _value(value), _valid(true) {}
@@ -109,7 +104,7 @@ template<typename T> struct L4_EXPORT Opt
   /// Get the const pointer to the value
   T const *operator -> () const noexcept { return &this->_value; }
   /// Get the value
-  T value() const noexcept { return this->_value; }
+  T const &value() const noexcept { return this->_value; }
   /// Get the value
   T &value() noexcept { return this->_value; }
   /// Get true if present, false if not
@@ -117,82 +112,103 @@ template<typename T> struct L4_EXPORT Opt
 };
 
 namespace Msg {
+
 template<typename T> struct Elem< Opt<T &> > : Elem<T &>
 {
-  enum { Is_optional = true };
+  static constexpr bool Is_optional = true;
   using svr_arg_type = Opt<typename Elem<T &>::svr_type> &;
   using svr_type = Opt<typename Elem<T &>::svr_type>;
 };
 
 template<typename T> struct Elem< Opt<T *> > : Elem<T *>
 {
-  enum { Is_optional = true };
+  static constexpr bool Is_optional = true;
   using svr_arg_type = Opt<typename Elem<T *>::svr_type> &;
   using svr_type = Opt<typename Elem<T *>::svr_type>;
 };
 
-
-
-template<typename T, typename CLASS>
-struct Svr_val_ops<Opt<T>, Dir_out, CLASS> : Svr_noops< Opt<T> >
-{
-  using svr_type = Opt<T>;
-  using Native = Svr_val_ops<T, Dir_out, CLASS>;
-
-  using Svr_noops< svr_type >::to_svr;
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    svr_type &arg, Dir_out, CLASS) noexcept
-  {
-    return Native::to_svr(msg, offset, limit, arg.value(), Dir_out(), CLASS());
-  }
-
-  using Svr_noops< svr_type >::from_svr;
-  static int from_svr(char *msg, unsigned offset, unsigned limit, l4_ret_t ret,
-                      svr_type const &arg, Dir_out, CLASS) noexcept
-  {
-    if (arg.is_valid())
-      return Native::from_svr(msg, offset, limit, ret, arg.value(),
-                              Dir_out(), CLASS());
-    return offset;
-  }
-};
-
 template<typename T> struct Elem< Opt<T> > : Elem<T>
 {
-  enum { Is_optional = true };
+  static constexpr bool Is_optional = true;
   using arg_type = Opt<T>;
 };
 
 template<typename T> struct Elem< Opt<T const *> > : Elem<T const *>
 {
-  enum { Is_optional = true };
+  static constexpr bool Is_optional = true;
   using arg_type = Opt<T const *>;
 };
 
 template<typename T>
 struct Is_valid_rpc_type< Opt<T const &> > : L4::Types::False {};
 
-template<typename T, typename CLASS>
-struct Clnt_val_ops<Opt<T>, Dir_in, CLASS> : Clnt_noops< Opt<T> >
+// This specialization is only used for optional input arguments. Optional
+// output arguments use a plain `T &` or `T *` on the client side. If the
+// argument is not present, it stays default constructed.
+template<typename T>
+struct Clnt_val_ops<Opt<T>>
 {
-  using arg_type = Opt<T>;
-  using Native = Detail::_Clnt_val_ops<typename Elem<T>::arg_type, Dir_in, CLASS>;
+  using Native = Detail::_Clnt_val_ops<T>;
+  using Plain = Detail::_Plain<T>;
 
-  using Clnt_noops< arg_type >::to_msg;
-  static int to_msg(char *msg, unsigned offset, unsigned limit,
-                    arg_type arg, Dir_in, CLASS) noexcept
+  static int to_msg_data(char *msg, unsigned offset, unsigned limit,
+                         Opt<T> const &arg) noexcept
   {
     if (arg.is_valid())
-      return Native::to_msg(msg, offset, limit,
-                            Detail::_Plain<T>::deref(arg.value()),
-                            Dir_in(), CLASS());
+      return Native::to_msg_data(msg, offset, limit, Plain::deref(arg.value()));
+    return offset;
+  }
+
+  static int to_msg_items(char *msg, unsigned offset, unsigned limit,
+                          Opt<T> const &arg) noexcept
+  {
+    if (arg.is_valid())
+      return Native::to_msg_items(msg, offset, limit,
+                                  Plain::deref(arg.value()));
+    return offset;
+  }
+
+  // No to_msg_* methods. They are never called because optional output
+  // arguments don't use the Opt<> type on the client side (see Elem<Opt<...>>
+  // above). Likewise, intentionally left without to_msg_buffers(). Buffer
+  // items are not supported because they are client side output arguments.
+};
+
+// This specialization is only used for optional output arguments. Optional
+// input arguments use a plain `T` on the server side. If the argument is not
+// present, it stays default constructed.
+template<typename T>
+struct Svr_val_ops<Opt<T>>
+{
+  using Native = Svr_val_ops<T>;
+
+  // Intentinally without to_svr_data() and to_svr_items(). They are never
+  // called. Optional input arguments don't use the Opt<> type on the server
+  // side. See Elem<Opt<...>> above.
+
+  static int reserve_data(char *msg, unsigned offset, unsigned limit,
+                          Opt<T> &arg) noexcept
+  {
+    return Native::reserve_data(msg, offset, limit, arg.value());
+  }
+
+  static int from_svr_data(char *msg, unsigned offset, unsigned limit,
+                           Opt<T> const &arg) noexcept
+  {
+    if (arg.is_valid())
+      return Native::from_svr_data(msg, offset, limit, arg.value());
+    return offset;
+  }
+
+  static int from_svr_items(char *msg, unsigned offset, unsigned limit,
+                            Opt<T> const &arg) noexcept
+  {
+    if (arg.is_valid())
+      return Native::from_svr_items(msg, offset, limit, arg.value());
     return offset;
   }
 };
 
-template<typename T> struct Class< Opt<T> > :
-  Class< typename Detail::_Plain<T>::type > {};
-template<typename T> struct Direction< Opt<T> > : Direction<T> {};
 }
 
 /**
@@ -202,6 +218,17 @@ template<typename T> struct Direction< Opt<T> > : Direction<T> {};
  * via Ipc::Istream. To receive an object capability, an instance of Small_buf
  * that refers to an empty capability slot must be inserted into the
  * Ipc::Istream before the receive operation.
+ *
+ * In an RPC interface, a Small_buf must be combined with a Snd_fpage output
+ * argument. The Small_buf argument is removed from the server function
+ * signature. Instead, the adjacent Snd_fpage output argument is used by the
+ * server function to send the capability. On the client side, the caller can
+ * check the Snd_fpage output argument what has been received. See the
+ * following example:
+ *
+ * ~~~~~~{.cpp}
+ * L4_RPC(l4_ret_t, test, (L4::Ipc::Small_buf cap, L4::Ipc::Snd_fpage &snd_cap));
+ * ~~~~~~
  */
 class  L4_EXPORT Small_buf
 {
@@ -489,6 +516,17 @@ public:
  *
  * This class represents a non-small receive item. A receive item is a message
  * item in the buffer registers of the UTCB of the receiver (see l4_utcb_br()).
+ *
+ * In an RPC interface, a Rcv_fpage must be combined with a Snd_fpage output
+ * argument. The Rcv_fpage argument is removed from the server function
+ * signature. Instead, the adjacent Snd_fpage output argument is used by the
+ * server function to send the capability. On the client side, the caller can
+ * check the Snd_fpage output argument what has been received. See the
+ * following example:
+ *
+ * ~~~~~~{.cpp}
+ * L4_RPC(l4_ret_t, test, (L4::Ipc::Rcv_fpage fp, L4::Ipc::Snd_fpage &snd_fp));
+ * ~~~~~~
  */
 class Rcv_fpage : public Gen_fpage
 {
@@ -581,26 +619,49 @@ protected:
 
 namespace Msg {
 
-// Snd_fpage are out items
-template<> struct Class<L4::Ipc::Snd_fpage> : Cls_item {};
+template<>
+struct Clnt_val_ops<L4::Ipc::Snd_fpage>
+  : Clnt_noops<L4::Ipc::Snd_fpage>
+{
+  static int to_msg_items(char *msg, unsigned offset, unsigned limit,
+                          L4::Ipc::Snd_fpage const &arg) noexcept
+  { return msg_add<L4::Ipc::Snd_fpage>(msg, offset, limit, arg); }
 
-// Rcv_fpage are buffer items
-template<> struct Class<L4::Ipc::Rcv_fpage> : Cls_buffer {};
+  static int from_msg_items(char *msg, unsigned offset, unsigned limit,
+                            L4::Ipc::Snd_fpage &arg) noexcept
+  { return msg_get<L4::Ipc::Snd_fpage>(msg, offset, limit, arg); }
+};
 
 template<>
-struct Clnt_val_ops<L4::Ipc::Rcv_fpage, Dir_in, Cls_buffer>
+struct Svr_val_ops<L4::Ipc::Snd_fpage>
+  : Svr_noops<L4::Ipc::Snd_fpage>
+{
+  static int to_svr_items(char *msg, unsigned offset, unsigned limit,
+                          L4::Ipc::Snd_fpage &arg) noexcept
+  { return msg_get<L4::Ipc::Snd_fpage>(msg, offset, limit, arg); }
+
+  static int from_svr_items(char *msg, unsigned offset, unsigned limit,
+                            L4::Ipc::Snd_fpage const &arg) noexcept
+  { return msg_add(msg, offset, limit, arg); }
+};
+
+// Rcv_fpage are special buffer items. They are invisible on the server side
+// and must be passed literally to setup the client receive buffers.
+template<> struct Is_valid_rpc_type<L4::Ipc::Rcv_fpage *> : L4::Types::False {};
+template<> struct Is_valid_rpc_type<L4::Ipc::Rcv_fpage &> : L4::Types::False {};
+
+template<>
+struct Clnt_val_ops<L4::Ipc::Rcv_fpage>
   : Clnt_noops<L4::Ipc::Rcv_fpage>
 {
-  using Clnt_noops<L4::Ipc::Rcv_fpage>::to_msg;
-
-  static int to_msg(char *msg, unsigned offs, unsigned limit,
-                    L4::Ipc::Rcv_fpage arg, Dir_in, Cls_buffer) noexcept
+  static int to_msg_buffers(char *brs, unsigned offs, unsigned limit,
+                            L4::Ipc::Rcv_fpage const &arg) noexcept
   {
     offs = align_to<l4_umword_t>(offs);
     unsigned words = arg.forward_mappings() ? 3 : 2;
     if (L4_UNLIKELY(!check_size<l4_umword_t>(offs, limit, words)))
       return -L4_EMSGTOOLONG;
-    auto *buf = reinterpret_cast<l4_umword_t*>(msg + offs);
+    auto *buf = reinterpret_cast<l4_umword_t*>(brs + offs);
     *buf++ = arg.base_x();
     *buf++ = arg.data();
     if (arg.forward_mappings())
@@ -616,11 +677,24 @@ template<> struct Elem<L4::Ipc::Rcv_fpage>
   using arg_type = L4::Ipc::Rcv_fpage;
   using svr_type = void;
   using svr_arg_type = void;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
 
-// Small_buf are buffer items
-template<> struct Class<L4::Ipc::Small_buf> : Cls_buffer {};
+// Small_buf are special buffer items. They are invisible on the server side
+// and must be passed literally to setup the client receive buffers.
+template<> struct Is_valid_rpc_type<L4::Ipc::Small_buf *> : L4::Types::False {};
+template<> struct Is_valid_rpc_type<L4::Ipc::Small_buf &> : L4::Types::False {};
+
+template<>
+struct Clnt_val_ops<L4::Ipc::Small_buf>
+  : Clnt_noops<L4::Ipc::Small_buf>
+{
+  static int to_msg_buffers(char *brs, unsigned offs, unsigned limit,
+                            L4::Ipc::Small_buf const &arg) noexcept
+  { return msg_add<L4::Ipc::Small_buf>(brs, offs, limit, arg); }
+};
 
 // Remove receive buffers from server-side arguments
 template<> struct Elem<L4::Ipc::Small_buf>
@@ -628,8 +702,11 @@ template<> struct Elem<L4::Ipc::Small_buf>
   using arg_type = L4::Ipc::Small_buf;
   using svr_type = void;
   using svr_arg_type = void;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
+
 } // namespace Msg
 
 // L4::Cap<> handling
@@ -844,35 +921,40 @@ namespace Msg {
 template<typename A>
 struct Is_valid_rpc_type< L4::Cap<A> > : L4::Types::False {};
 
-template<typename A> struct Class< Cap<A> > : Cls_item {};
 template<typename A> struct Elem< Cap<A> >
 {
-  enum { Is_optional = false };
   using arg_type = Cap<A>;
   using svr_type = L4::Ipc::Snd_fpage;
   using svr_arg_type = L4::Ipc::Snd_fpage;
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = true;
+  static constexpr bool Is_output = false;
 };
 
 
-template<typename A, typename CLASS>
-struct Svr_val_ops<Cap<A>, Dir_in, CLASS> :
-  // Uses default Svr_val_ops implementation with L4::Ipc::Snd_fpage.
-  Svr_val_ops<L4::Ipc::Snd_fpage, Dir_in, CLASS>
-{};
+template<typename A>
+struct Svr_val_ops<Cap<A>>
+  : Svr_noops<Cap<A>>
+{
+  static int from_svr_items(char *msg, unsigned offset, unsigned limit,
+                            Cap<A> const &arg) noexcept
+  {
+    if (L4_UNLIKELY(!arg.is_valid()))
+      // do not map anything
+      return msg_add(msg, offset, limit, L4::Ipc::Snd_fpage(arg.cap(), 0));
 
-template<typename A, typename CLASS>
-struct Clnt_val_ops<Cap<A>, Dir_in, CLASS> :
+    return msg_add(msg, offset, limit, arg.fpage());
+  }
+};
+
+template<typename A>
+struct Clnt_val_ops<Cap<A>> :
   Clnt_noops< Cap<A> >
 {
-  using Clnt_noops< Cap<A> >::to_msg;
-
-  static int to_msg(char *msg, unsigned offset, unsigned limit,
-                    Cap<A> arg, Dir_in, Cls_item) noexcept
+  static int to_msg_items(char *msg, unsigned offset, unsigned limit,
+                          Cap<A> const &arg) noexcept
   {
     // passing an invalid cap as mandatory argument is an error
-    // XXX: This checks for a client calling error, we could
-    //      also just ignore this for performance reasons and
-    //      let the client fail badly (Alex: I'd prefer this)
     if (L4_UNLIKELY(!arg.is_valid()))
       return -L4_EMSGMISSARG;
 
@@ -883,42 +965,24 @@ struct Clnt_val_ops<Cap<A>, Dir_in, CLASS> :
 template<typename A>
 struct Elem<Out<L4::Cap<A> > >
 {
-  enum { Is_optional = false };
   using arg_type = L4::Cap<A>;
   using svr_type = Ipc::Cap<A>;
   using svr_arg_type = svr_type &;
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
 
-template<typename A> struct Direction< Out< L4::Cap<A> > > : Dir_out {};
-template<typename A> struct Class< Out< L4::Cap<A> > > : Cls_item {};
-
 template<typename A>
-struct Clnt_val_ops< L4::Cap<A>, Dir_out, Cls_item > :
+struct Clnt_val_ops< L4::Cap<A> > :
   Clnt_noops< L4::Cap<A> >
 {
-  using Clnt_noops< L4::Cap<A> >::to_msg;
-  static int to_msg(char *msg, unsigned offset, unsigned limit,
-                    L4::Cap<A> arg, Dir_in, Cls_buffer) noexcept
+  static int to_msg_buffers(char *brs, unsigned offset, unsigned limit,
+                            L4::Cap<A> const &arg) noexcept
   {
     if (L4_UNLIKELY(!arg.is_valid()))
       return -L4_EMSGMISSARG; // no buffer inserted
-    return msg_add(msg, offset, limit, Small_buf(arg));
-  }
-};
-
-template<typename A>
-struct Svr_val_ops< L4::Ipc::Cap<A>, Dir_out, Cls_item > :
-  Svr_noops<Cap<A>>
-{
-  using Svr_noops<Cap<A>>::from_svr;
-  static int from_svr(char *msg, unsigned offset, unsigned limit, long,
-                      Cap<A> arg, Dir_out, Cls_item) noexcept
-  {
-    if (L4_UNLIKELY(!arg.is_valid()))
-      // do not map anything
-      return msg_add(msg, offset, limit, L4::Ipc::Snd_fpage(arg.cap(), 0));
-
-    return msg_add(msg, offset, limit, arg.fpage());
+    return msg_add(brs, offset, limit, Small_buf(arg));
   }
 };
 

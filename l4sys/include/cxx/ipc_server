@@ -28,12 +28,15 @@ template<> struct Sizeof<void> { enum { size = 0 }; };
  */
 template<typename ...> struct Arg_pack
 {
-  template<typename DIR>
+  template<Phase PHASE>
   unsigned get(char *, unsigned offset, unsigned)
   { return offset; }
 
-  template<typename DIR>
-  unsigned set(char *, unsigned offset, unsigned, l4_ret_t)
+  unsigned reserve_data(char *, unsigned offset, unsigned)
+  { return offset; }
+
+  template<Phase PHASE>
+  unsigned set(char *, unsigned offset, unsigned)
   { return offset; }
 
   template<typename F, typename ...ARGS>
@@ -99,35 +102,66 @@ struct Svr_arg : Svr_xmit<T>, Arg_pack<M...>
 
   using svr_type = SVR_TYPE;
   using svr_arg_type = typename _Elem<T>::svr_arg_type;
+  using xmit = Svr_xmit<T>;
+  static constexpr bool Is_input = _Elem<T>::Is_input;
+  static constexpr bool Is_output = _Elem<T>::Is_output;
 
   svr_type v;
 
-  template<typename DIR>
+  template<Phase PHASE>
   int get(char *msg, unsigned offset, unsigned limit)
   {
-    using ct = Svr_xmit<T>;
-    int r = ct::to_svr(msg, offset, limit, this->v,
-                       typename DIR::dir(), typename DIR::cls());
+    int r = offset;
+    if constexpr(Is_input)
+      {
+        static_assert(PHASE == Phase::Data || PHASE == Phase::Items);
+        if constexpr (PHASE == Phase::Data)
+          r = xmit::to_svr_data(msg, offset, limit, this->v);
+        else // PHASE == Phase::Items
+          r = xmit::to_svr_items(msg, offset, limit, this->v);
+      }
+
     if (L4_LIKELY(r >= 0))
-      return Base::template get<DIR>(msg, r, limit);
+      return Base::template get<PHASE>(msg, r, limit);
 
     if (_Elem<T>::Is_optional)
       {
         v = svr_type();
-        return Base::template get<DIR>(msg, offset, limit);
+        return Base::template get<PHASE>(msg, offset, limit);
       }
+
     return r;
   }
 
-  template<typename DIR>
-  int set(char *msg, unsigned offset, unsigned limit, l4_ret_t ret)
+  int reserve_data(char *msg, unsigned offset, unsigned limit)
   {
-    using ct = Svr_xmit<T>;
-    int r = ct::from_svr(msg, offset, limit, ret, this->v,
-                         typename DIR::dir(), typename DIR::cls());
+    int r = offset;
+    if constexpr (Is_output)
+      r = xmit::reserve_data(msg, offset, limit, this->v);
+
+    if (L4_LIKELY(r >= 0))
+      return Base::reserve_data(msg, r, limit);
+
+    return r;
+  }
+
+  template<Phase PHASE>
+  int set(char *msg, unsigned offset, unsigned limit)
+  {
+    int r = offset;
+    if constexpr (Is_output)
+      {
+        static_assert(PHASE == Phase::Data || PHASE == Phase::Items);
+        if constexpr (PHASE == Phase::Data)
+          r = xmit::from_svr_data(msg, offset, limit, this->v);
+        else // PHASE == Phase::Items
+          r = xmit::from_svr_items(msg, offset, limit, this->v);
+      }
+
     if (L4_UNLIKELY(r < 0))
       return r;
-    return Base::template set<DIR>(msg, r, limit, ret);
+
+    return Base::template set<PHASE>(msg, r, limit);
   }
 
   template<typename F, typename ...ARGS>
@@ -142,8 +176,7 @@ struct Svr_arg : Svr_xmit<T>, Arg_pack<M...>
   void reply(ARGS &&...args)
   {
     // Only consume out parameters or parameters of type In_out.
-    if constexpr (L4::Types::Same_v<typename Direction<T>::type, Dir_out>
-                  || L4::Types::Same_template_v<T, In_out>)
+    if constexpr (Is_output)
       reply_consume_arg<ARGS...>(L4::Types::forward<ARGS>(args)...);
     else
       Base::template reply<ARGS...>(L4::Types::forward<ARGS>(args)...);
@@ -192,18 +225,25 @@ template<typename R, typename ...ARGS>
 struct Svr_arg_pack<R (ARGS...)> : Detail::Arg_pack<ARGS...>
 {
   using Base = Detail::Arg_pack<ARGS...>;
-  template<typename DIR>
+
+  template<Phase PHASE>
   int get(void *msg, unsigned offset, unsigned limit)
   {
     char *buf = static_cast<char *>(msg);
-    return Base::template get<DIR>(buf, offset, limit);
+    return Base::template get<PHASE>(buf, offset, limit);
   }
 
-  template<typename DIR>
-  int set(void *msg, unsigned offset, unsigned limit, l4_ret_t ret)
+  int reserve_data(void *msg, unsigned offset, unsigned limit)
   {
     char *buf = static_cast<char *>(msg);
-    return Base::template set<DIR>(buf, offset, limit, ret);
+    return Base::reserve_data(buf, offset, limit);
+  }
+
+  template<Phase PHASE>
+  int set(void *msg, unsigned offset, unsigned limit)
+  {
+    char *buf = static_cast<char *>(msg);
+    return Base::template set<PHASE>(buf, offset, limit);
   }
 };
 
@@ -233,17 +273,17 @@ handle_svr_obj_call(O *o, l4_utcb_t *utcb, l4_msgtag_t tag, ARGS ...args)
 
   unsigned const in_bytes = tag.words() * Word_bytes;
 
-  in_pos = pack.template get<Do_in_data>(&mrs->mr[0], in_pos, in_bytes);
+  in_pos = pack.template get<Phase::Data>(&mrs->mr[0], in_pos, in_bytes);
 
   if (L4_UNLIKELY(in_pos < 0))
     return l4_msgtag(Short_err, 0, 0, 0);
 
-  if (L4_UNLIKELY(pack.template get<Do_out_data>(mrs->mr, 0, Mr_bytes) < 0))
+  if (L4_UNLIKELY(pack.reserve_data(mrs->mr, 0, Mr_bytes) < 0))
     return l4_msgtag(Short_err, 0, 0, 0);
 
 
-  in_pos = pack.template get<Do_in_items>(&mrs->mr[tag.words()], 0,
-                                          tag.items() * Item_bytes);
+  in_pos = pack.template get<Phase::Items>(&mrs->mr[tag.words()], 0,
+                                           tag.items() * Item_bytes);
 
   if (L4_UNLIKELY(in_pos < 0))
     return l4_msgtag(Short_err, 0, 0, 0);
@@ -262,14 +302,13 @@ handle_svr_obj_call(O *o, l4_utcb_t *utcb, l4_msgtag_t tag, ARGS ...args)
     return l4_msgtag(ret, 0, 0, 0);
 
   // reply with the reply data from the server function
-  int bytes = pack.template set<Do_out_data>(mrs->mr, 0, Mr_bytes, ret);
+  int bytes = pack.template set<Phase::Data>(mrs->mr, 0, Mr_bytes);
   if (L4_UNLIKELY(bytes < 0))
     return l4_msgtag(-L4_EMSGTOOLONG, 0, 0, 0);
 
   unsigned words = (bytes + Word_bytes - 1) / Word_bytes;
-  bytes = pack.template set<Do_out_items>(&mrs->mr[words], 0,
-                                          Mr_bytes - words * Word_bytes,
-                                          ret);
+  bytes = pack.template set<Phase::Items>(&mrs->mr[words], 0,
+                                          Mr_bytes - words * Word_bytes);
   if (L4_UNLIKELY(bytes < 0))
     return l4_msgtag(-L4_EMSGTOOLONG, 0, 0, 0);
 
@@ -297,21 +336,20 @@ pack_svr_reply(l4_utcb_t *utcb, l4_ret_t ret, OUT_ARGS && ...args)
   l4_msg_regs_t *mrs = l4_utcb_mr_u(utcb);
 
   // Reserves spaces for all data output arguments.
-  if (L4_UNLIKELY(pack.template get<Do_out_data>(mrs->mr, 0, Mr_bytes) < 0))
+  if (L4_UNLIKELY(pack.reserve_data(mrs->mr, 0, Mr_bytes) < 0))
     return l4_msgtag(-L4_EMSGTOOSHORT, 0, 0, 0);
 
   // call the server reply function
   pack.template reply<OUT_ARGS...>(L4::Types::forward<OUT_ARGS>(args)...);
 
   // reply with the reply data from the server function
-  int bytes = pack.template set<Do_out_data>(mrs->mr, 0, Mr_bytes, ret);
+  int bytes = pack.template set<Phase::Data>(mrs->mr, 0, Mr_bytes);
   if (L4_UNLIKELY(bytes < 0))
     return l4_msgtag(-L4_EMSGTOOLONG, 0, 0, 0);
 
   unsigned words = (bytes + Word_bytes - 1) / Word_bytes;
-  bytes = pack.template set<Do_out_items>(&mrs->mr[words], 0,
-                                          Mr_bytes - words * Word_bytes,
-                                          ret);
+  bytes = pack.template set<Phase::Items>(&mrs->mr[words], 0,
+                                          Mr_bytes - words * Word_bytes);
   if (L4_UNLIKELY(bytes < 0))
     return l4_msgtag(-L4_EMSGTOOLONG, 0, 0, 0);
 
@@ -409,9 +447,9 @@ struct Dispatch_call
   {
     OPCODE_TYPE op;
     unsigned limit = tag.words() * Word_bytes;
-    using S = Svr_xmit<OPCODE_TYPE>;
-    l4_ret_t err = S::to_svr(reinterpret_cast<char *>(l4_utcb_mr_u(utcb)->mr), 0,
-                             limit, op, Dir_in(), Cls_data());
+    using xmit = Svr_xmit<OPCODE_TYPE>;
+    auto *mrs = reinterpret_cast<char *>(l4_utcb_mr_u(utcb)->mr);
+    l4_ret_t err = xmit::to_svr_data(mrs, 0, limit, op);
     if (L4_UNLIKELY(err < 0))
       return l4_msgtag(-L4_EMSGTOOSHORT, 0, 0, 0);
 

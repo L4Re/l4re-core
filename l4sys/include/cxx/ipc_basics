@@ -138,37 +138,24 @@ inline int msg_get(char *msg, unsigned offs, unsigned limit, T &v) noexcept
   return offs + sizeof(T);
 }
 
-/// Marker type for input values
-struct Dir_in { using type = Dir_in;   using dir = Dir_in; };
-/// Marker type for output values
-struct Dir_out { using type = Dir_out; using dir = Dir_out; };
-
-/// Marker type for data values
-struct Cls_data { using type = Cls_data;     using cls = Cls_data; };
-/// Marker type for item values
-struct Cls_item { using type = Cls_item;     using cls = Cls_item; };
-/// Marker type for receive buffer values
-struct Cls_buffer { using type = Cls_buffer; using cls = Cls_buffer; };
-
-// Typical combinations
-/// Marker for Input data
-struct Do_in_data : Dir_in, Cls_data {};
-/// Marker for Output data
-struct Do_out_data : Dir_out, Cls_data {};
-/// Marker for Input items
-struct Do_in_items : Dir_in, Cls_item {};
-/// Marker for Output items
-struct Do_out_items : Dir_out, Cls_item {};
-/// Marker for receive buffers
-struct Do_rcv_buffers : Dir_in, Cls_buffer {};
+/// Phase during IPC argument mashalling
+enum class Phase
+{
+  Data,     /// First phase: copy bytes to/from MRs
+  Items,    /// Second phase: place/read items into/from MRs
+  Buffers,  /// Third phase: setup buffer registers (client side only)
+};
 
 // implementation details
 namespace Detail {
 
+// Helper struct to get the plain type of the IPC argument. The various
+// specializations remove the pointer or reference.
 template<typename T> struct _Plain
 {
   using type = T;
-  static T deref(T v) noexcept { return v; }
+  static T &deref(T &v) noexcept { return v; }
+  static T const &deref(T const &v) noexcept { return v; }
 };
 
 template<typename T> struct _Plain<T *>
@@ -195,109 +182,270 @@ template<typename T> struct _Plain<T const *>
   using type = T;
   static T const &deref(T const *v) noexcept { return *v; }
 };
+
 }
 
 /**
- * Defines client-side handling of 'MTYPE' as RPC argument.
- * \tparam MTYPE  Elem<T>::arg_type (where T is the type used in the RPC
- *                definition)
- * \tparam DIR    Dir_in (client -> server), or Dir_out (server -> client)
- * \tparam CLASS  Cls_data, Cls_item, or Cls_buffer
+ * Empty client side marshalling code.
+ *
+ * Used as basis for concrete marshalling code.
  */
-template<typename MTYPE, typename DIR, typename CLASS> struct Clnt_val_ops;
-
-// Provides empty default implementations for the Dir/Cls combinations in which
-// the type does not participate (for the Do_in_items, Do_in_data, ... passes in
-// Rpc_inline_call::call).
-//
-// The Clnt_val_ops specializations derive from Clnt_noops, and pull in the
-// empty default implementations with `using Clnt_noops::{to,from}_msg`, to
-// handle the other Dir/Cls combinations.
 template<typename T> struct Clnt_noops
 {
-  template<typename A, typename B>
-  static constexpr int to_msg(char *, unsigned offset, unsigned, T, A, B) noexcept
+  /**
+   * Write IPC data of `arg` into UTCB.
+   *
+   * Called only for input arguments.
+   *
+   * \param msg     Pointer to first usable UTCB MR
+   * \param offset  Byte offset into UTCB MRs
+   * \param limit   Maximum number of bytes available in `msg` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int to_msg_data([[maybe_unused]] char *msg, unsigned offset,
+                                   [[maybe_unused]] unsigned limit,
+                                   [[maybe_unused]] T const &arg) noexcept
   { return offset; }
 
-  /// copy data from the message to the client reference
-  template<typename A, typename B>
-  static constexpr int from_msg(char *, unsigned offset, unsigned, long, T const &, A, B) noexcept
+  /**
+   * Write IPC send items of `arg` into UTCB.
+   *
+   * Called only for input arguments.
+   *
+   * \param msg     Pointer to first usable UTCB MR
+   * \param offset  Byte offset into UTCB MRs
+   * \param limit   Maximum number of bytes available in `msg` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int to_msg_items([[maybe_unused]] char *msg, unsigned offset,
+                                    [[maybe_unused]] unsigned limit,
+                                    [[maybe_unused]] T const &arg) noexcept
+  { return offset; }
+
+  /**
+   * Setup receive buffers for object capabilities in UTCB.
+   *
+   * Called only for output arguments.
+   *
+   * \param brs     Pointer to first usable UTCB BR
+   * \param offset  Byte offset into UTCB BRs
+   * \param limit   Maximum number of bytes available in `brs` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `brs` for next IPC argument
+   */
+  static constexpr int to_msg_buffers([[maybe_unused]] char *brs,
+                                      unsigned offset,
+                                      [[maybe_unused]] unsigned limit,
+                                      [[maybe_unused]] T const &arg) noexcept
+  { return offset; }
+
+  /**
+   * Read IPC data for `arg` from UTCB.
+   *
+   * Called only for output arguments.
+   *
+   * \param      msg    Pointer to first filled UTCB MR
+   * \param      offset Byte offset into UTCB MRs
+   * \param      limit  Number of bytes available in `msg` array
+   * \param[out] arg    The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int from_msg_data([[maybe_unused]] char *msg,
+                                     unsigned offset,
+                                     [[maybe_unused]] unsigned limit,
+                                     [[maybe_unused]] T &arg) noexcept
+  { return offset; }
+
+  /**
+   * Read IPC return items for `arg` from UTCB.
+   *
+   * Called only for output arguments.
+   *
+   * \param      msg    Pointer to first filled UTCB MR
+   * \param      offset Byte offset into UTCB MRs
+   * \param      limit  Number of bytes available in `msg` array
+   * \param[out] arg    The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int from_msg_items([[maybe_unused]] char *msg,
+                                      unsigned offset,
+                                      [[maybe_unused]] unsigned limit,
+                                      [[maybe_unused]] T &arg) noexcept
   { return offset; }
 };
 
-// Provides empty default implementations for the Dir/Class combinations in which
-// the type does not participate (for the Do_in_items, Do_in_data, ... passes in
-// handle_svr_obj_call).
-//
-// The Svr_val_ops specializations derive from Svr_noops, and pull in the
-// empty default implementations with `using Svr_noops::{from,to}_svr`, to
-// handle the other Dir/Cls combinations.
+/**
+ * Empty server side marshalling code.
+ *
+ * Used as basis for concrete marshalling code.
+ */
 template<typename T> struct Svr_noops
 {
-  template<typename A, typename B>
-  static constexpr int from_svr(char *, unsigned offset, unsigned, long, T, A, B) noexcept
+  /**
+   * Write IPC data of `arg` into UTCB.
+   *
+   * Called only for output arguments.
+   *
+   * \param msg     Pointer to first usable UTCB MR
+   * \param offset  Byte offset into UTCB MRs
+   * \param limit   Maximum number of bytes available in `msg` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int from_svr_data([[maybe_unused]] char *msg,
+                                     unsigned offset,
+                                     [[maybe_unused]] unsigned limit,
+                                     [[maybe_unused]] T const &arg) noexcept
   { return offset; }
 
-  /// copy data from the message to the client reference
-  template<typename A, typename B>
-  static constexpr int to_svr(char *, unsigned offset, unsigned, T const &, A, B) noexcept
+  /**
+   * Write IPC send items of `arg` into UTCB.
+   *
+   * Called only for output arguments.
+   *
+   * \param msg     Pointer to first usable UTCB MR
+   * \param offset  Byte offset into UTCB MRs
+   * \param limit   Maximum number of bytes available in `msg` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int from_svr_items([[maybe_unused]] char *msg,
+                                      unsigned offset,
+                                      [[maybe_unused]] unsigned limit,
+                                      [[maybe_unused]] T const &arg) noexcept
+  { return offset; }
+
+  /**
+   * Reserve IPC data bytes in UTCB.
+   *
+   * Called only for output arguments. The argument type may remember the
+   * `msg` pointer if the data is put directly into the UTCB.
+   *
+   * \param msg     Pointer to first usable UTCB MR
+   * \param offset  Byte offset into UTCB MRs
+   * \param limit   Maximum number of bytes available in `msg` array
+   * \param arg     The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int reserve_data([[maybe_unused]] char *msg,
+                                    unsigned offset,
+                                    [[maybe_unused]] unsigned limit,
+                                    [[maybe_unused]] T &arg) noexcept
+  { return offset; }
+
+  /**
+   * Read IPC data for `arg` from UTCB.
+   *
+   * Called only for input arguments.
+   *
+   * \param      msg    Pointer to first filled UTCB MR
+   * \param      offset Byte offset into UTCB MRs
+   * \param      limit  Number of bytes available in `msg` array
+   * \param[out] arg    The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int to_svr_data([[maybe_unused]] char *msg,
+                                   unsigned offset,
+                                   [[maybe_unused]] unsigned limit,
+                                   [[maybe_unused]] T &arg) noexcept
+  { return offset; }
+
+  /**
+   * Read IPC return items for `arg` from UTCB.
+   *
+   * Called only for input arguments.
+   *
+   * \param      msg    Pointer to first filled UTCB MR
+   * \param      offset Byte offset into UTCB MRs
+   * \param      limit  Number of bytes available in `msg` array
+   * \param[out] arg    The IPC argument
+   *
+   * \retval  <0  Error code
+   * \retval  >=0 Offset into `msg` for next IPC argument
+   */
+  static constexpr int to_svr_items([[maybe_unused]] char *msg,
+                                    unsigned offset,
+                                    [[maybe_unused]] unsigned limit,
+                                    [[maybe_unused]] T &arg) noexcept
   { return offset; }
 };
 
-// Default implementation, via reinterpret_cast.
-// Override by partially specializing Clnt_val_ops.
-template<typename MTYPE, typename CLASS>
-struct Clnt_val_ops<MTYPE, Dir_in, CLASS> : Clnt_noops<MTYPE>
+/**
+ * Defines client-side handling of 'MTYPE' as RPC argument.
+ *
+ * This provides the default implementation for trivially copyable data types.
+ * Other types override the marshalling operations by partially specializing
+ * Clnt_val_ops.
+ *
+ * The template is always instantiated with the
+ * `Detail::_Plain<typename Elem<ARG>::arg_type>::type` of the IPC method
+ * signature.
+ *
+ * \tparam MTYPE  Elem<T>::arg_type (where T is the type used in the RPC
+ *                definition)
+ */
+template<typename MTYPE>
+struct Clnt_val_ops : Clnt_noops<MTYPE>
 {
-  using Clnt_noops<MTYPE>::to_msg;
+  // TODO: add static_assert(std::is_trivially_copyable_v<MTYPE>)
+
   /// Copy a T into the message (arg must be either MTYPE or MTYPE const &)
-  static int to_msg(char *msg, unsigned offset, unsigned limit,
-                    MTYPE arg, Dir_in, CLASS) noexcept
+  static int to_msg_data(char *msg, unsigned offset, unsigned limit,
+                         MTYPE const &arg) noexcept
   { return msg_add<MTYPE>(msg, offset, limit, arg); }
-};
 
-// Default implementation, via reinterpret_cast.
-// Override by partially specializing Clnt_val_ops.
-template<typename MTYPE, typename CLASS>
-struct Clnt_val_ops<MTYPE, Dir_out, CLASS> : Clnt_noops<MTYPE>
-{
-  using Clnt_noops<MTYPE>::from_msg;
   /// Copy data from the message to a T client reference (arg must be MTYPE &)
-  static int from_msg(char *msg, unsigned offset, unsigned limit, long,
-                      MTYPE &arg, Dir_out, CLASS) noexcept
+  static int from_msg_data(char *msg, unsigned offset, unsigned limit,
+                           MTYPE &arg) noexcept
   { return msg_get<MTYPE>(msg, offset, limit, arg); }
 };
 
 /**
- * Defines server-side handling for `MTYPE` server arguments.
- * \tparam MTYPE  Elem<T>::svr_type (where T is the type used in the RPC
+ * Defines server-side handling of 'MTYPE' as RPC argument.
+ *
+ * This provides the default implementation for trivially copyable data types.
+ * Other types override the marshalling operations by partially specializing
+ * Svr_val_ops.
+ *
+ * The template is always instantiated with the `Elem<ARG>::svr_type` of the
+ * IPC method signature.
+ *
+ * \tparam MTYPE  Elem<T>::arg_type (where T is the type used in the RPC
  *                definition)
- * \tparam DIR    Dir_in (client -> server), or Dir_out (server -> client)
- * \tparam CLASS  Cls_data, Cls_item, or Cls_buffer
  */
-template<typename MTYPE, typename DIR, typename CLASS> struct Svr_val_ops;
-
-// Default implementation, via reinterpret_cast.
-// Override by partially specializing Clnt_val_ops.
-template<typename MTYPE, typename CLASS>
-struct Svr_val_ops<MTYPE, Dir_in, CLASS> : Svr_noops<MTYPE>
+template<typename MTYPE>
+struct Svr_val_ops : Svr_noops<MTYPE>
 {
-  using Svr_noops<MTYPE>::to_svr;
+  // TODO: add static_assert(std::is_trivially_copyable_v<MTYPE>)
+
   /// Copy data from the message to a T server reference (arg must be MTYPE &)
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    MTYPE &arg, Dir_in, CLASS) noexcept
+  static int to_svr_data(char *msg, unsigned offset, unsigned limit,
+                         MTYPE &arg) noexcept
   { return msg_get<MTYPE>(msg, offset, limit, arg); }
-};
 
-// Default implementation, via reinterpret_cast.
-// Override by partially specializing Clnt_val_ops.
-template<typename MTYPE, typename CLASS>
-struct Svr_val_ops<MTYPE, Dir_out, CLASS> : Svr_noops<MTYPE>
-{
   /// Prepare a T output operand (arg must be MTYPE &)
-  using Svr_noops<MTYPE>::to_svr;
-  static int to_svr(char *, unsigned offs, unsigned limit,
-                    MTYPE &, Dir_out, CLASS) noexcept
+  static int reserve_data(char *, unsigned offs, unsigned limit,
+                          MTYPE &) noexcept
   {
     offs = align_to<MTYPE>(offs);
     if (L4_UNLIKELY(!check_size<MTYPE>(offs, limit)))
@@ -305,13 +453,19 @@ struct Svr_val_ops<MTYPE, Dir_out, CLASS> : Svr_noops<MTYPE>
     return offs + sizeof(MTYPE);
   }
 
-  using Svr_noops<MTYPE>::from_svr;
   /// Copy a T into the message (arg must be either MTYPE or MTYPE const &)
-  static int from_svr(char *msg, unsigned offset, unsigned limit, long,
-                      MTYPE arg, Dir_out, CLASS) noexcept
+  static int from_svr_data(char *msg, unsigned offset, unsigned limit,
+                           MTYPE const &arg) noexcept
   { return msg_add<MTYPE>(msg, offset, limit, arg); }
 };
 
+/**
+ * Helper struct to describe various aspects of an IPC argument.
+ *
+ * There are standard specializations to handle input and output arguments of
+ * trivial data types. More complex types need to add further specializations
+ * as needed.
+ */
 template<typename T> struct Elem
 {
   /// The type used in client argument list
@@ -320,9 +474,12 @@ template<typename T> struct Elem
   using svr_type = T;
   /// The argument type for the server-side function
   using svr_arg_type = T; // might be const & (depending on the size)
-
-  enum { Is_optional = false };
-
+  /// Is it an optional argument?
+  static constexpr bool Is_optional = false;
+  /// Is the argument transferred from client to server?
+  static constexpr bool Is_input = true;
+  /// Is the argument transferred from server to client?
+  static constexpr bool Is_output = false;
 };
 
 template<typename T> struct Elem<T &>
@@ -331,7 +488,9 @@ template<typename T> struct Elem<T &>
   using svr_type = T;
   ///< pass a reference to the server-function too
   using svr_arg_type = T &;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
 
 template<typename T> struct Elem<T const &>
@@ -341,7 +500,9 @@ template<typename T> struct Elem<T const &>
   // as the RPC uses a const reference we use it here too,
   // we could also use pass by value depending on the size
   using svr_arg_type = T const &;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = true;
+  static constexpr bool Is_output = false;
 };
 
 template<typename T> struct Elem<T *> : Elem<T &>
@@ -364,37 +525,21 @@ struct _Elem : Elem<T>
                 "L4::Ipc::Msg::_Elem<T>: type T is not a valid RPC parameter type.");
 };
 
-
-template<typename T> struct Class : Cls_data {};
-template<typename T> struct Direction : Dir_in {};
-template<typename T> struct Direction<T const &> : Dir_in {};
-template<typename T> struct Direction<T const *> : Dir_in {};
-template<typename T> struct Direction<T &> : Dir_out {};
-template<typename T> struct Direction<T *> : Dir_out {};
-
-template<typename T> struct _Clnt_noops :
-  Clnt_noops<typename Detail::_Plain<typename _Elem<T>::arg_type>::type>
-{};
-
 namespace Detail {
 
-template<typename T, typename DIR, typename CLASS>
+template<typename T>
 struct _Clnt_val_ops :
-  Clnt_val_ops<typename Detail::_Plain<T>::type, DIR, CLASS> {};
+  Clnt_val_ops<typename Detail::_Plain<T>::type> {};
 
 template<typename T,
          typename ELEM = _Elem<T>,
-         typename CLNT_OPS = _Clnt_val_ops<typename ELEM::arg_type,
-                                           typename Direction<T>::type,
-                                           typename Class<typename Detail::_Plain<T>::type>::type>
+         typename CLNT_OPS = _Clnt_val_ops<typename ELEM::arg_type>
          >
 struct _Clnt_xmit : CLNT_OPS {};
 
 template<typename T,
          typename ELEM = _Elem<T>,
-         typename SVR_OPS = Svr_val_ops<typename ELEM::svr_type,
-                                        typename Direction<T>::type,
-                                        typename Class<typename Detail::_Plain<T>::type>::type>
+         typename SVR_OPS = Svr_val_ops<typename ELEM::svr_type>
          >
 struct _Svr_xmit : SVR_OPS {};
 

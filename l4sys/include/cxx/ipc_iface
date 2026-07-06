@@ -574,12 +574,12 @@ template<typename ...ARGS>
 struct Buf
 {
 public:
-  template<typename DIR>
+  template<Phase PHASE>
   static constexpr int write(char *, int offset, int) noexcept
   { return offset; }
 
-  template<typename DIR>
-  static constexpr int read(char *, int offset, int, l4_ret_t) noexcept
+  template<Phase PHASE>
+  static constexpr int read(char *, int offset, int) noexcept
   { return offset; }
 
   using Base = void;
@@ -593,29 +593,45 @@ struct Buf<A, M...> : Buf<M...>
   using xmit = Clnt_xmit<A>;
   using arg_type = typename _Elem<A>::arg_type;
   using plain = Detail::_Plain<arg_type>;
+  static constexpr bool Is_input = _Elem<A>::Is_input;
+  static constexpr bool Is_output = _Elem<A>::Is_output;
 
-  template<typename DIR>
+  template<Phase PHASE>
   static int
   write(char *base, int offset, int limit,
         arg_type a, typename _Elem<M>::arg_type ...m) noexcept
   {
-    offset = xmit::to_msg(base, offset, limit, plain::deref(a),
-                          typename DIR::dir(), typename DIR::cls());
-    return Base::template write<DIR>(base, offset, limit, m...);
+    if constexpr (PHASE == Phase::Data && Is_input)
+      offset = xmit::to_msg_data(base, offset, limit, plain::deref(a));
+    else if constexpr (PHASE == Phase::Items && Is_input)
+      offset = xmit::to_msg_items(base, offset, limit, plain::deref(a));
+    else if constexpr (PHASE == Phase::Buffers && Is_output)
+      offset = xmit::to_msg_buffers(base, offset, limit, plain::deref(a));
+
+    return Base::template write<PHASE>(base, offset, limit, m...);
   }
 
-  template<typename DIR>
+  template<Phase PHASE>
   static int
-  read(char *base, int offset, int limit, l4_ret_t ret,
+  read(char *base, int offset, int limit,
        arg_type a, typename _Elem<M>::arg_type ...m) noexcept
   {
-    int r = xmit::from_msg(base, offset, limit, ret, plain::deref(a),
-                           typename DIR::dir(), typename DIR::cls());
+    int r = offset;
+    // Read output parameters from UTCB MRs.
+    if constexpr (Is_output)
+      {
+        static_assert(PHASE == Phase::Data || PHASE == Phase::Items);
+        if constexpr (PHASE == Phase::Data)
+          r = xmit::from_msg_data(base, offset, limit, plain::deref(a));
+        else // PHASE == Phase::Items
+          r = xmit::from_msg_items(base, offset, limit, plain::deref(a));
+      }
+
     if (L4_LIKELY(r >= 0))
-      return Base::template read<DIR>(base, r, limit, ret, m...);
+      return Base::template read<PHASE>(base, r, limit, m...);
 
     if (_Elem<A>::Is_optional)
-      return Base::template read<DIR>(base, offset, limit, ret, m...);
+      return Base::template read<PHASE>(base, offset, limit, m...);
 
     return r;
   }
@@ -626,23 +642,23 @@ template <typename ...ARGS> struct _Part
   /// The buffer type with op-code.
   using Data = Buf<ARGS...>;
 
-  template<typename DIR>
+  template<Phase PHASE>
   static int write(void *b, int offset, int limit,
                         typename _Elem<ARGS>::arg_type ...m) noexcept
   {
     char *buf = static_cast<char *>(b);
-    int r = Data::template write<DIR>(buf, offset, limit, m...);
+    int r = Data::template write<PHASE>(buf, offset, limit, m...);
     if (L4_LIKELY(r >= offset))
       return r - offset;
     return r;
   }
 
-  template<typename DIR>
-  static int read(void *b, int offset, int limit, l4_ret_t ret,
+  template<Phase PHASE>
+  static int read(void *b, int offset, int limit,
                        typename _Elem<ARGS>::arg_type ...m) noexcept
   {
     char *buf = static_cast<char *>(b);
-    int r = Data::template read<DIR>(buf, offset, limit, ret, m...);
+    int r = Data::template read<PHASE>(buf, offset, limit, m...);
     if (L4_LIKELY(r >= offset))
       return r - offset;
     return r;
@@ -666,13 +682,12 @@ struct Part<R (ARGS...), void> : _Part<ARGS...>
   using Data = Buf<ARGS...>;
 
   // write arguments, skipping the dummy opcode
-  template<typename DIR>
   static int write_op(void *b, int offset, int limit,
                       int /*placeholder for op*/,
                       typename _Elem<ARGS>::arg_type ...m) noexcept
   {
     char *buf = static_cast<char *>(b);
-    int r = Data::template write<DIR>(buf, offset, limit, m...);
+    int r = Data::template write<Phase::Data>(buf, offset, limit, m...);
     if (L4_LIKELY(r >= offset))
       return r - offset;
     return r;
@@ -688,12 +703,11 @@ struct Part<R (ARGS...), OPCODE> : _Part<ARGS...>
   using Data = Buf<opcode_type, ARGS...>;
 
   // write arguments, including the opcode
-  template<typename DIR>
   static int write_op(void *b, int offset, int limit,
                       opcode_type op, typename _Elem<ARGS>::arg_type ...m) noexcept
   {
     char *buf = static_cast<char *>(b);
-    int r = Data::template write<DIR>(buf, offset, limit, op, m...);
+    int r = Data::template write<Phase::Data>(buf, offset, limit, op, m...);
     if (L4_LIKELY(r >= offset))
       return r - offset;
     return r;
@@ -726,8 +740,7 @@ Rpc_inline_call<OP, CLASS, R (ARGS...), FLAGS>::
 
   // handle in-data part of the arguments
   int send_bytes =
-    Args::template write_op<Do_in_data>(mrs->mr, 0, Mr_bytes,
-                                        Opt::Opcode, a...);
+    Args::write_op(mrs->mr, 0, Mr_bytes, Opt::Opcode, a...);
 
   if (L4_UNLIKELY(send_bytes < 0))
     return return_err<R>(send_bytes);
@@ -736,8 +749,8 @@ Rpc_inline_call<OP, CLASS, R (ARGS...), FLAGS>::
   int const send_words = send_bytes / Word_bytes;
   // write the in-items part of the message if there is one
   int item_bytes =
-    Args::template write<Do_in_items>(&mrs->mr[send_words], 0,
-                                      Mr_bytes - send_bytes, a...);
+    Args::template write<Phase::Items>(&mrs->mr[send_words], 0,
+                                       Mr_bytes - send_bytes, a...);
 
   if (L4_UNLIKELY(item_bytes < 0))
     return return_err<R>(item_bytes);
@@ -753,7 +766,7 @@ Rpc_inline_call<OP, CLASS, R (ARGS...), FLAGS>::
       // the limit leaves us at least one register for the zero terminator
       // add the buffers given as arguments to the buffer registers
       int bytes =
-        Args::template write<Do_rcv_buffers>(brs->br, 0, Br_bytes - Word_bytes,
+        Args::template write<Phase::Buffers>(brs->br, 0, Br_bytes - Word_bytes,
                                              a...);
 
       if (L4_UNLIKELY(bytes < 0))
@@ -794,7 +807,7 @@ Rpc_inline_call<OP, CLASS, R (ARGS...), FLAGS>::
   int const rcv_bytes = t.words() * Word_bytes;
 
   // read the static out-data values to the arguments
-  int err = Args::template read<Do_out_data>(mrs->mr, 0, rcv_bytes, r, a...);
+  int err = Args::template read<Phase::Data>(mrs->mr, 0, rcv_bytes, a...);
 
   int const item_limit = t.items() * Item_bytes;
 
@@ -802,8 +815,8 @@ Rpc_inline_call<OP, CLASS, R (ARGS...), FLAGS>::
     return return_err<R>(-L4_EMSGTOOSHORT);
 
   // read the static out-items to the arguments
-  err = Args::template read<Do_out_items>(&mrs->mr[t.words()], 0, item_limit,
-                                          r, a...);
+  err = Args::template read<Phase::Items>(&mrs->mr[t.words()], 0, item_limit,
+                                          a...);
 
   if (L4_UNLIKELY(err < 0))
     return return_err<R>(-L4_EMSGTOOSHORT);

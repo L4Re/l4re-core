@@ -38,20 +38,17 @@ template< typename CHAR = char, typename LEN_TYPE = unsigned long,
 using String_in_buf = Array_in_buf<CHAR, LEN_TYPE, MAX>;
 
 namespace Msg {
-template<typename A, typename LEN>
-struct Clnt_xmit< String<A, LEN> > : Clnt_xmit< Array<A, LEN> > {};
 
-template<typename A, typename LEN, typename CLASS>
-struct Svr_val_ops< String<A, LEN>, Dir_in, CLASS >
-: Svr_val_ops< Array_ref<A, LEN>, Dir_in, CLASS >
+template<typename A, typename LEN>
+struct Svr_val_ops< String<A, LEN> > : Svr_val_ops< Array_ref<A, LEN> >
 {
-  using Base = Svr_val_ops< Array_ref<A, LEN>, Dir_in, CLASS >;
+  using Base = Svr_val_ops< Array_ref<A, LEN> >;
   using svr_type = typename Base::svr_type;
-  using Base::to_svr;
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    svr_type &a, Dir_in dir, Cls_data cls)
+
+  static int to_svr_data(char *msg, unsigned offset, unsigned limit,
+                         svr_type &a)
   {
-    int r = Base::to_svr(msg, offset, limit, a, dir, cls);
+    int r = Base::to_svr_data(msg, offset, limit, a);
     if (r < 0)
       return r;
 
@@ -66,15 +63,14 @@ struct Svr_val_ops< String<A, LEN>, Dir_in, CLASS >
 };
 
 template<typename A, typename LEN>
-struct Clnt_xmit<String<A, LEN> &> : Clnt_xmit<Array<A, LEN> &>
+struct Clnt_val_ops<String<A, LEN>> : Clnt_val_ops<Array<A, LEN>>
 {
-  using type = Array<A, LEN> &;
+  using Base = Clnt_val_ops<Array<A, LEN>>;
+  using type = typename Base::type;
 
-  using Clnt_xmit<type>::from_msg;
-  static int from_msg(char *msg, unsigned offset, unsigned limit, long ret,
-                      Array<A, LEN> &a, Dir_out dir, Cls_data cls)
+  static int from_msg_data(char *msg, unsigned offset, unsigned limit, type &a)
   {
-    int r = Clnt_xmit<type>::from_msg(msg, offset, limit, ret, a, dir, cls);
+    int r = Base::from_msg_data(msg, offset, limit, a);
     if (r < 0)
       return r;
 
@@ -86,14 +82,6 @@ struct Clnt_xmit<String<A, LEN> &> : Clnt_xmit<Array<A, LEN> &>
     return r;
   };
 };
-
-template<typename A, typename LEN>
-struct Clnt_xmit<String<A, LEN> *> : Clnt_xmit<String<A, LEN> &> {};
-
-template<typename A, typename LEN, typename CLASS>
-struct Svr_val_ops<String<A, LEN>, Dir_out, CLASS>
-: Svr_val_ops<Array_ref<A, LEN>, Dir_out, CLASS>
-{};
 
 template<typename A, typename LEN>
 struct Is_valid_rpc_type<String<A, LEN> const *> : L4::Types::False {};

@@ -162,7 +162,9 @@ struct Elem< Array<A, LEN> >
   /// Array_ref<> at the server side
   using svr_type = Array_ref<A, LEN>;
   using svr_arg_type = svr_type;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = true;
+  static constexpr bool Is_output = false;
 };
 
 /// Array as output argument
@@ -175,7 +177,9 @@ struct Elem< Array<A, LEN> & >
   using svr_type = Array_ref<A, LEN>;
   /// Array_ref<> & at the server side
   using svr_arg_type = svr_type &;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
 
 /// Array_ref as output argument
@@ -188,20 +192,18 @@ struct Elem< Array_ref<A, LEN> & >
   using svr_type = Array_ref<L4::Types::Remove_const_t<A>, LEN>;
   /// Array_ref<> & as server argument
   using svr_arg_type = svr_type &;
-  enum { Is_optional = false };
+  static constexpr bool Is_optional = false;
+  static constexpr bool Is_input = false;
+  static constexpr bool Is_output = true;
 };
-
-template<typename A> struct Class<Array<A> > : Class<A>::type {};
-template<typename A> struct Class<Array_ref<A> > : Class<A>::type {};
 
 namespace Detail {
 
 template<typename A, typename LEN, typename ARRAY, bool REF>
 struct Clnt_val_ops_d_in : Clnt_noops<ARRAY>
 {
-  using Clnt_noops<ARRAY>::to_msg;
-  static int to_msg(char *msg, unsigned offset, unsigned limit,
-                    ARRAY a, Dir_in, Cls_data)
+  static int to_msg_data(char *msg, unsigned offset, unsigned limit,
+                         ARRAY const &a)
   {
     offset = align_to<LEN>(offset);
     if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
@@ -223,49 +225,16 @@ struct Clnt_val_ops_d_in : Clnt_noops<ARRAY>
     return offset + a.length * sizeof(A);
   }
 };
+
 } // namespace Detail
 
 template<typename A, typename LEN>
-struct Clnt_val_ops<Array<A, LEN>, Dir_in, Cls_data> :
-  Detail::Clnt_val_ops_d_in<A, LEN, Array<A, LEN>, false> {};
-
-template<typename A, typename LEN>
-struct Clnt_val_ops<Array_ref<A, LEN>, Dir_in, Cls_data> :
-  Detail::Clnt_val_ops_d_in<A, LEN, Array_ref<A, LEN>, true> {};
-
-template<typename A, typename LEN, typename CLASS>
-struct Svr_val_ops< Array_ref<A, LEN>, Dir_in, CLASS >
-: Svr_noops< Array_ref<A, LEN> >
-{
-  using svr_type = Array_ref<A, LEN>;
-
-  using Svr_noops<svr_type>::to_svr;
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    svr_type &a, Dir_in, Cls_data)
-  {
-    offset = align_to<LEN>(offset);
-    if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
-      return -L4_EMSGTOOSHORT;
-    a.length = *reinterpret_cast<LEN *>(msg + offset);
-    offset = align_to<A>(offset + sizeof(LEN));
-    if (L4_UNLIKELY(!check_size<A>(offset, limit, a.length)))
-      return -L4_EMSGTOOSHORT;
-    a.data = reinterpret_cast<A*>(msg + offset);
-    return offset + a.length * sizeof(A);
-  }
-};
-
-template<typename A, typename LEN>
-struct Svr_xmit< Array<A, LEN> > : Svr_xmit< Array_ref<A, LEN> > {};
-
-template<typename A, typename LEN>
-struct Clnt_val_ops<Array<A, LEN>, Dir_out, Cls_data> : Clnt_noops<Array<A, LEN> >
+struct Clnt_val_ops<Array<A, LEN>> :
+  Detail::Clnt_val_ops_d_in<A, LEN, Array<A, LEN>, false>
 {
   using type = Array<A, LEN>;
 
-  using Clnt_noops<type>::from_msg;
-  static int from_msg(char *msg, unsigned offset, unsigned limit, long,
-                      type &a, Dir_out, Cls_data)
+  static int from_msg_data(char *msg, unsigned offset, unsigned limit, type &a)
   {
     offset = align_to<LEN>(offset);
     if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
@@ -292,14 +261,12 @@ struct Clnt_val_ops<Array<A, LEN>, Dir_out, Cls_data> : Clnt_noops<Array<A, LEN>
 };
 
 template<typename A, typename LEN>
-struct Clnt_val_ops<Array_ref<A, LEN>, Dir_out, Cls_data> :
-  Clnt_noops<Array_ref<A, LEN> >
+struct Clnt_val_ops<Array_ref<A, LEN>> :
+  Detail::Clnt_val_ops_d_in<A, LEN, Array_ref<A, LEN>, true>
 {
   using type = Array_ref<A, LEN>;
 
-  using Clnt_noops<type>::from_msg;
-  static int from_msg(char *msg, unsigned offset, unsigned limit, long,
-                      type &a, Dir_out, Cls_data)
+  static int from_msg_data(char *msg, unsigned offset, unsigned limit, type &a)
   {
     offset = align_to<LEN>(offset);
     if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
@@ -317,16 +284,29 @@ struct Clnt_val_ops<Array_ref<A, LEN>, Dir_out, Cls_data> :
   };
 };
 
-template<typename A, typename LEN, typename CLASS>
-struct Svr_val_ops<Array_ref<A, LEN>, Dir_out, CLASS> :
-  Svr_noops<Array_ref<L4::Types::Remove_const_t<A>, LEN>>
+template<typename A, typename LEN>
+struct Svr_val_ops< Array_ref<A, LEN> > :
+  Svr_noops< Array_ref<A, LEN> >
 {
+  using svr_type = Array_ref<A, LEN>;
   using elem_type = L4::Types::Remove_const_t<A>;
-  using svr_type = Array_ref<elem_type, LEN>;
 
-  using Svr_noops<svr_type>::to_svr;
-  static int to_svr(char *msg, unsigned offset, unsigned limit,
-                    svr_type &a, Dir_out, Cls_data)
+  static int to_svr_data(char *msg, unsigned offset, unsigned limit,
+                         svr_type &a)
+  {
+    offset = align_to<LEN>(offset);
+    if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
+      return -L4_EMSGTOOSHORT;
+    a.length = *reinterpret_cast<LEN *>(msg + offset);
+    offset = align_to<A>(offset + sizeof(LEN));
+    if (L4_UNLIKELY(!check_size<A>(offset, limit, a.length)))
+      return -L4_EMSGTOOSHORT;
+    a.data = reinterpret_cast<A*>(msg + offset);
+    return offset + a.length * sizeof(A);
+  }
+
+  static int reserve_data(char *msg, unsigned offset, unsigned limit,
+                          svr_type &a)
   {
     offset = align_to<LEN>(offset);
     if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
@@ -338,9 +318,8 @@ struct Svr_val_ops<Array_ref<A, LEN>, Dir_out, CLASS> :
     return offset;
   }
 
-  using Svr_noops<svr_type>::from_svr;
-  static int from_svr(char *msg, unsigned offset, unsigned limit, long,
-                      svr_type a, Dir_out, Cls_data)
+  static int from_svr_data(char *msg, unsigned offset, unsigned limit,
+                           svr_type const &a)
   {
     offset = align_to<LEN>(offset);
     if (L4_UNLIKELY(!check_size<LEN>(offset, limit)))
@@ -362,9 +341,6 @@ struct Svr_val_ops<Array_ref<A, LEN>, Dir_out, CLASS> :
     return offset + a.length * sizeof(A);
   }
 };
-
-template<typename A, typename LEN>
-struct Svr_xmit<Array<A, LEN> &> : Svr_xmit<Array_ref<A, LEN> &> {};
 
 // Pointer to array is not implemented.
 template<typename A, typename LEN>
