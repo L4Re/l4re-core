@@ -106,31 +106,6 @@ struct Is_valid_rpc_type< In_out<A> > : L4::Types::False {};
 
 
 /**
- * Pass the argument as plain data value.
- * \tparam T  The type of the original argument.
- *
- * As_value<T> is used when \a T would be otherwise interpreted specially,
- * for example as flexpage.  When using As_value<> then the argument is
- * transmitted as plain data element.
- */
-template<typename T> struct L4_EXPORT As_value
-{
-  using value_type = T;
-  T v;
-  As_value() noexcept {}
-  As_value(T v) noexcept : v(v) {}
-  operator T () const noexcept { return v; }
-  operator T & () noexcept { return v; }
-};
-
-namespace Msg {
-template<typename T> struct Class< As_value<T> > : Cls_data {};
-template<typename T> struct Elem< As_value<T> > : Elem<T> {};
-template<typename T> struct Elem< As_value<T> *> : Elem<T *> {};
-}
-
-
-/**
  * Attribute for defining an optional RPC argument.
  */
 template<typename T> struct L4_EXPORT Opt
