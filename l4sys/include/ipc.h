@@ -372,8 +372,7 @@ l4_ipc_call(l4_cap_idx_t object, l4_utcb_t *utcb, l4_msgtag_t tag,
  *
  * \param reply_cap Reply capability selector. A value of #L4_INVALID_CAP
  *                  denotes the implicit reply capability of the current
- *                  thread. Otherwise, to use an explicit reply capability, the
- *                  L4_REPLY_CAP_BIT must be set.
+ *                  thread. Otherwise, use an explicit reply capability.
  * \utcb{utcb}
  * \param tag       Describes the message to be sent as reply.
  * \param timeout   Timeout pair (see #l4_timeout_t).

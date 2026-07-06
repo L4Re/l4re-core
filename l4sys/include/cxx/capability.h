@@ -468,18 +468,15 @@ Cap<T> cap_reinterpret_cast(Cap<F> const &c) noexcept
 
 /**
  * Value class for a reply capability index.
- *
- * Ensures that the L4_REPLY_CAP_BIT is always set to make this an index into
- * the reply capability space.
  */
 class Reply_cap_idx
 {
   l4_cap_idx_t _i;
 
 public:
-  constexpr explicit Reply_cap_idx() noexcept : _i(L4_INVALID_REPLY_CAP) {}
+  constexpr explicit Reply_cap_idx() noexcept : _i(L4_INVALID_CAP) {}
   constexpr explicit Reply_cap_idx(l4_cap_idx_t i) noexcept
-  : _i(i | L4_REPLY_CAP_BIT) {}
+  : _i(i) {}
 
   constexpr l4_cap_idx_t cap() const noexcept
   { return _i; }

@@ -392,7 +392,7 @@ template< typename L >
 inline l4_msgtag_t
 Server<L>::reply_n_wait(l4_msgtag_t reply, l4_umword_t *p, l4_utcb_t *utcb)
 {
-  l4_cap_idx_t reply_cap = L4_INVALID_REPLY_CAP;
+  l4_cap_idx_t reply_cap = L4_INVALID_CAP;
   if constexpr (Has_setup_reply_cap)
     reply_cap = this->setup_reply_cap().cap();
 

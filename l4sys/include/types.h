@@ -343,19 +343,31 @@ L4_INLINE l4_msgtag_t l4_msgtag(long label, unsigned words, unsigned items,
  * A capability selector is either a (shifted) capability index, a (shifted)
  * reply capability index or the invalid capability selector #L4_INVALID_CAP.
  *
- * Usage of the invalid capability selector is defined only for invoking IPC
- * (see \ref l4_ipc_api "Object Invocation"): When IPC is invoked on
- * #L4_INVALID_CAP, then it is resolved to a capability for the current thread
- * with full permissions.
+ * When an interface expects an argument of type #l4_cap_idx_t and the
+ * documentation does not state any specifics, it is assumed that the argument
+ * is an object capability index, i.e., `idx` `<<` #L4_CAP_SHIFT for arbitrary
+ * `idx`. The behavior for other values is then undefined.
  *
- * Reply capability selectors are denoted by the presence of the
- * #L4_REPLY_CAP_BIT. A reply capability selector is an index into the reply
- * capability space of the current task. The #L4_INVALID_REPLY_CAP selector is
- * resolved to the implicit reply capability of the current thread.
+ * Some interfaces allow use of #L4_INVALID_CAP for indicating the absence of a
+ * capability index.
  *
- * Otherwise, the API assumes that each argument of type #l4_cap_idx_t is a
- * capability index, i.e., `idx` `<<` #L4_CAP_SHIFT for arbitrary `idx`. The
- * behavior for other arguments is then undefined.
+ * When invoking IPC (see \ref l4_ipc_api "Object Invocation"), all types of
+ * capability selectors are relevant. The particular type is determined by the
+ * IPC operation.
+ *
+ * - When the operation is a reply (with or without a receive phase) or an open
+ *   wait without a send, then the selector refers to a reply capability.
+ * - Otherwise, the selector refers to an object capability.
+ *
+ * When not #L4_INVALID_CAP, the selector contains a capability index for the
+ * respective space (reply capability space or object capability space) of the
+ * current task. When the selector is #L4_INVALID_CAP, the meaning depends on
+ * the type of capability:
+ *
+ * - When the operation needs a reply capability, the implicit reply capability
+ *   of the invoking thread is used.
+ * - When the operation needs an object capability, an implicit object
+ *   capability for the current thread with full permissions is used.
  */
 typedef unsigned long l4_cap_idx_t;
 
