@@ -98,7 +98,7 @@ struct Kumem_chunk_meta
   static constexpr unsigned slot_to_off(unsigned slot)
   {
     // Identitiy mapping for the last (incomplete) cache line.
-    if (slot >= Num_cache_lines * Slots_per_cache_line) [[unlikely]]
+    if (L4_UNLIKELY(slot >= Num_cache_lines * Slots_per_cache_line))
       return slot * Kumem_slot_size;
 
     unsigned group_num = slot / Num_cache_lines;
@@ -111,7 +111,7 @@ struct Kumem_chunk_meta
   {
     unsigned idx = off / Kumem_slot_size;
     // Identitiy mapping for the last (incomplete) cache line.
-    if (idx >= Num_cache_lines * Slots_per_cache_line) [[unlikely]]
+    if (L4_UNLIKELY(idx >= Num_cache_lines * Slots_per_cache_line))
       return idx;
 
     unsigned group_num = idx % Slots_per_cache_line;

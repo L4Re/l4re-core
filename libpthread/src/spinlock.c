@@ -13,6 +13,7 @@
 /* GNU Library General Public License for more details.                 */
 
 /* Internal locks */
+#include <l4/sys/compiler.h>
 #include <l4/sys/kip.h>
 #include <l4/sys/pi_mutex.h>
 #include <l4/util/util.h>
@@ -461,7 +462,7 @@ int
 __pthread_lock_pi(struct _pthread_pi_fastlock *lock, pthread_descr self)
 {
   // Mutex not initialized.
-  if (unlikely(lock->status == NULL))
+  if (L4_UNLIKELY(lock->status == NULL))
     return EINVAL;
 
   if (__pthread_pi_fastlock_try_lock(lock, self))
@@ -484,7 +485,7 @@ __pthread_lock_pi_deadlock(struct _pthread_pi_fastlock *lock,
                            pthread_descr self)
 {
   int res = __pthread_lock_pi(lock, self);
-  if (unlikely(res == EDEADLK))
+  if (L4_UNLIKELY(res == EDEADLK))
     l4_sleep_forever();
   return res;
 }
@@ -492,7 +493,7 @@ __pthread_lock_pi_deadlock(struct _pthread_pi_fastlock *lock,
 int __pthread_unlock_pi(struct _pthread_pi_fastlock *lock, pthread_descr self)
 {
   // Mutex not initialized.
-  if (unlikely(lock->status == NULL))
+  if (L4_UNLIKELY(lock->status == NULL))
     return EINVAL;
 
   if (__pthread_pi_fastlock_try_unlock(lock, self))
@@ -513,7 +514,7 @@ int __pthread_unlock_pi(struct _pthread_pi_fastlock *lock, pthread_descr self)
 int __pthread_trylock_pi(struct _pthread_pi_fastlock *lock, pthread_descr self)
 {
   // Mutex not initialized.
-  if (unlikely(lock->status == NULL))
+  if (L4_UNLIKELY(lock->status == NULL))
     return EINVAL;
 
   if (__pthread_pi_fastlock_try_lock(lock, self))
@@ -533,19 +534,19 @@ __pthread_timedlock_pi_internal(struct _pthread_pi_fastlock *lock,
                                 int report_deadlock)
 {
   // Mutex not initialized.
-  if (unlikely(lock->status == NULL))
+  if (L4_UNLIKELY(lock->status == NULL))
     return EINVAL;
 
   if (__pthread_pi_fastlock_try_lock(lock, self))
     return 0; // Acquired lock via fast path :)
 
   struct timespec realtime;
-  if (unlikely(clock_gettime(CLOCK_REALTIME, &realtime)))
+  if (L4_UNLIKELY(clock_gettime(CLOCK_REALTIME, &realtime)))
     return errno;
 
   uint64_t realtime_us = realtime.tv_sec * 1000000ULL + realtime.tv_nsec / 1000;
   uint64_t abstime_us = abstime->tv_sec * 1000000ULL + abstime->tv_nsec / 1000;
-  if (unlikely(realtime_us >= abstime_us))
+  if (L4_UNLIKELY(realtime_us >= abstime_us))
     return ETIMEDOUT;
 
   // The timeout for pthread_mutex_timedlock() is based on the CLOCK_REALTIME,
