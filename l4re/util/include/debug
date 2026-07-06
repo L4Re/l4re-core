@@ -134,6 +134,9 @@ public:
   Dbg() {}
 
   explicit constexpr
+  Dbg(unsigned long) {}
+
+  explicit constexpr
   Dbg(unsigned long, char const *, char const *) {}
 
 #endif
