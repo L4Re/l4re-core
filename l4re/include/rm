@@ -670,12 +670,18 @@ public:
    */
   l4_ret_t find(l4_addr_t *addr, unsigned long *size, Offset *offset,
                 L4Re::Rm::Flags *flags, L4::Cap<Dataspace> *m) noexcept
-  { return find_t::call(c(), addr, size, flags, offset, m); }
+  {
+    l4_cap_idx_t ds_idx;
+    l4_ret_t ret = find_t::call(c(), addr, size, flags, offset, &ds_idx);
+    if (ret >= 0)
+      *m = L4::Cap<Dataspace>(ds_idx);
+    return ret;
+  }
 
   L4_RPC_NF(l4_ret_t, find, (L4::Ipc::In_out<l4_addr_t *> addr,
                              L4::Ipc::In_out<unsigned long *> size,
                              L4Re::Rm::Flags *flags, Offset *offset,
-                             L4::Ipc::As_value<L4::Cap<Dataspace>> *m));
+                             l4_cap_idx_t *m));
 
   /**
    * A region is a range of virtual addresses which is backed by content.

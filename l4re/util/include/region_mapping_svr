@@ -105,7 +105,7 @@ public:
    */
   l4_ret_t op_find(L4Re::Rm::Rights, l4_addr_t &addr, unsigned long &size,
                L4Re::Rm::Flags &flags, L4Re::Rm::Offset &offset,
-               L4::Cap<L4Re::Dataspace> &m)
+               l4_cap_idx_t &m)
   {
     if (!DERIVED::Have_find)
       return -L4_EPERM;
@@ -129,7 +129,7 @@ public:
 
     flags = r->second.flags() | flag_area;
     offset = r->second.offset();
-    m = L4::Cap<L4Re::Dataspace>(r->second.client_cap_idx());
+    m = r->second.client_cap_idx();
     return L4_EOK;
   }
 

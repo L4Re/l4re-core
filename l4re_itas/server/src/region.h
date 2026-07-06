@@ -309,7 +309,7 @@ public:
 
   long op_find(L4Re::Rm::Rights rights, l4_addr_t &addr, unsigned long &size,
                L4Re::Rm::Flags &flags, L4Re::Rm::Offset &offset,
-               L4::Cap<L4Re::Dataspace> &m)
+               l4_cap_idx_t &m)
   {
     Rw_lock_read_scope scope(_lock);
     return _region_map.op_find(rights, addr, size, flags, offset, m);
