@@ -69,34 +69,8 @@ struct Is_valid_rpc_type< In_out<A *> > : Is_valid_rpc_type<A *> {};
 template<typename A>
 struct Is_valid_rpc_type< In_out<A const *> > : L4::Types::False {};
 
-#ifdef CONFIG_ALLOW_REFS
-template<typename A> struct Elem< In_out<A &> > : Elem<A &> {};
-
-template<typename A>
-struct Svr_xmit< In_out<A &> > : Svr_xmit<A &>, Svr_xmit<A const &>
-{
-  using Svr_xmit<A &>::from_svr;
-  using Svr_xmit<A const &>::to_svr;
-};
-
-template<typename A>
-struct Clnt_xmit< In_out<A &> > : Clnt_xmit<A &>, Clnt_xmit<A const &>
-{
-  using Clnt_xmit<A &>::from_msg;
-  using Clnt_xmit<A const &>::to_msg;
-};
-
-template<typename A>
-struct Is_valid_rpc_type< In_out<A &> > : Is_valid_rpc_type<A &> {};
-template<typename A>
-struct Is_valid_rpc_type< In_out<A const &> > : L4::Types::False {};
-
-#else
-
 template<typename A>
 struct Is_valid_rpc_type< In_out<A &> > : L4::Types::False {};
-
-#endif
 
 // Value types don't make sense for output.
 template<typename A>
