@@ -351,6 +351,22 @@ namespace Types {
   struct Is_enum : Integral_constant<bool, __is_enum(T)> {};
 
   /**
+   * Check whether the given type is trivially copyable.
+   *
+   * Objects of such types may be safely copied with memcpy() or serialized
+   * to/from binary files.
+   *
+   * \tparam T  Type to check whether it is trivially copyable.
+   */
+  template<typename T>
+  struct Is_trivially_copyable
+  : Integral_constant<bool, __is_trivially_copyable(T)>
+  {};
+
+  template<typename T>
+  inline constexpr bool Is_trivially_copyable_v = __is_trivially_copyable(T);
+
+  /**
    * Helper template for Underlying_type.
    *
    * \note The implementation relies on the intrinsic __underlying_type()
