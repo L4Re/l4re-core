@@ -450,19 +450,19 @@ L4_WEAK_ALIAS(__pthread_mutexattr_setpshared, pthread_mutexattr_setpshared)
 
 /* Return in *PROTOCOL the mutex protocol attribute in *ATTR.  */
 int
-attribute_hidden
+L4_HIDDEN
 __pthread_mutexattr_getprotocol (const pthread_mutexattr_t * __restrict attr,
                                  int *__restrict protocol)
 {
   *protocol = attr->__mutexprotocol;
   return 0;
 }
-weak_alias(__pthread_mutexattr_getprotocol, pthread_mutexattr_getprotocol)
+L4_WEAK_ALIAS(__pthread_mutexattr_getprotocol, pthread_mutexattr_getprotocol)
 
 /* Set the mutex protocol attribute in *ATTR to PROTOCOL (either
    PTHREAD_PRIO_NONE, PTHREAD_PRIO_INHERIT, or PTHREAD_PRIO_PROTECT).  */
 int
-attribute_hidden
+L4_HIDDEN
 __pthread_mutexattr_setprotocol (pthread_mutexattr_t *attr,
             int protocol)
 {
@@ -473,26 +473,26 @@ __pthread_mutexattr_setprotocol (pthread_mutexattr_t *attr,
   attr->__mutexprotocol = protocol;
   return 0;
 }
-weak_alias(__pthread_mutexattr_setprotocol, pthread_mutexattr_setprotocol)
+L4_WEAK_ALIAS(__pthread_mutexattr_setprotocol, pthread_mutexattr_setprotocol)
 
 /* Return in *PRIOCEILING the mutex prioceiling attribute in *ATTR.  */
 int
-attribute_hidden
+L4_HIDDEN
 __pthread_mutexattr_getprioceiling (const pthread_mutexattr_t * __restrict attr,
                                     int *__restrict prioceiling)
 {
   return EINVAL;
 }
-weak_alias(__pthread_mutexattr_getprioceiling, pthread_mutexattr_getprioceiling)
+L4_WEAK_ALIAS(__pthread_mutexattr_getprioceiling, pthread_mutexattr_getprioceiling)
 
 /* Set the mutex prioceiling attribute in *ATTR to PRIOCEILING.  */
 int
-attribute_hidden
+L4_HIDDEN
 __pthread_mutexattr_setprioceiling (pthread_mutexattr_t *attr, int prioceiling)
 {
   return EINVAL;
 }
-weak_alias(__pthread_mutexattr_setprioceiling, pthread_mutexattr_setprioceiling)
+L4_WEAK_ALIAS(__pthread_mutexattr_setprioceiling, pthread_mutexattr_setprioceiling)
 
 /* Once-only execution */
 

@@ -398,24 +398,24 @@ extern int pthread_mutexattr_gettype (const pthread_mutexattr_t *__restrict
 extern int pthread_mutexattr_getprotocol (const pthread_mutexattr_t *
             __restrict __attr,
             int *__restrict __protocol)
-     __THROW __nonnull ((1, 2));
+     __THROW;
 
 /* Set the mutex protocol attribute in *ATTR to PROTOCOL (either
    PTHREAD_PRIO_NONE, PTHREAD_PRIO_INHERIT, or PTHREAD_PRIO_PROTECT).  */
 extern int pthread_mutexattr_setprotocol (pthread_mutexattr_t *__attr,
             int __protocol)
-     __THROW __nonnull ((1));
+     __THROW;
 
 /* Return in *PRIOCEILING the mutex prioceiling attribute in *ATTR.  */
 extern int pthread_mutexattr_getprioceiling (const pthread_mutexattr_t *
                __restrict __attr,
                int *__restrict __prioceiling)
-     __THROW __nonnull ((1, 2));
+     __THROW;
 
 /* Set the mutex prioceiling attribute in *ATTR to PRIOCEILING.  */
 extern int pthread_mutexattr_setprioceiling (pthread_mutexattr_t *__attr,
                int __prioceiling)
-     __THROW __nonnull ((1));
+     __THROW;
 
 /* Functions for handling conditional variables.  */
 
