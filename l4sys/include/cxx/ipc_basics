@@ -407,7 +407,8 @@ template<typename T> struct Svr_noops
 template<typename MTYPE>
 struct Clnt_val_ops : Clnt_noops<MTYPE>
 {
-  // TODO: add static_assert(std::is_trivially_copyable_v<MTYPE>)
+  static_assert(L4::Types::Is_trivially_copyable_v<MTYPE>,
+                "Only trivially copyable types can be used as IPC arguments");
 
   /// Copy a T into the message (arg must be either MTYPE or MTYPE const &)
   static int to_msg_data(char *msg, unsigned offset, unsigned limit,
@@ -436,7 +437,8 @@ struct Clnt_val_ops : Clnt_noops<MTYPE>
 template<typename MTYPE>
 struct Svr_val_ops : Svr_noops<MTYPE>
 {
-  // TODO: add static_assert(std::is_trivially_copyable_v<MTYPE>)
+  static_assert(L4::Types::Is_trivially_copyable_v<MTYPE>,
+                "Only trivially copyable types can be used as IPC arguments");
 
   /// Copy data from the message to a T server reference (arg must be MTYPE &)
   static int to_svr_data(char *msg, unsigned offset, unsigned limit,
