@@ -104,7 +104,12 @@ public:
 # endif
 
   explicit constexpr
-  Dbg() : _m(1), _component(0), _subsys(0) { };
+  Dbg() : _m(1), _component(nullptr), _subsys(nullptr)
+  {}
+
+  explicit constexpr
+  Dbg(unsigned long mask) : _m(mask), _component(nullptr), _subsys(nullptr)
+  {}
 
   explicit constexpr
   Dbg(unsigned long mask, char const *comp, char const *subs)
