@@ -357,25 +357,12 @@ template<typename T> struct Elem<T const *> : Elem<T const &>
 /// Type trait defining a valid RPC parameter type.
 template<typename T> struct Is_valid_rpc_type : L4::Types::True {};
 
-// Static assertions outside functions work only properly from C++11
-// onwards. On earlier version make sure the compiler fails on an ugly
-// undefined struct instead.
-template<typename T, bool B> struct Error_invalid_rpc_parameter_used;
-template<typename T> struct Error_invalid_rpc_parameter_used<T, true> {};
-
-#if __cplusplus >= 201103L
 template<typename T>
 struct _Elem : Elem<T>
 {
   static_assert(Is_valid_rpc_type<T>::value,
                 "L4::Ipc::Msg::_Elem<T>: type T is not a valid RPC parameter type.");
 };
-#else
-template<typename T>
-struct _Elem : Elem<T>,
-               Error_invalid_rpc_parameter_used<T, Is_valid_rpc_type<T>::value>
-{};
-#endif
 
 
 template<typename T> struct Class : Cls_data {};
