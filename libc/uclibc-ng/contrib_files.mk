@@ -237,6 +237,7 @@ define SRC_libc/string
   strtok
   bcopy
   bzero
+  explicit_bzero
   memchr
   memcpy
   memmove
