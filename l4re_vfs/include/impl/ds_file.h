@@ -59,7 +59,8 @@ public:
    *
    * \param rt  Type of the I/O operation/condition to be ready.
    *
-   * \return Always true for reading, always false otherwise.
+   * \return Always true for reading. True for writing if writable.
+   *         Always false otherwise.
    */
   bool check_ready(Ready_type rt) noexcept override
   {
