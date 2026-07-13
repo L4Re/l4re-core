@@ -8,6 +8,7 @@
 
 #include "ds_file.h"
 
+#include <limits.h>
 #include <sys/ioctl.h>
 
 #include <l4/re/env>
