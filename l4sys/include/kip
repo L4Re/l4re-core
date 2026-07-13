@@ -77,6 +77,7 @@ namespace L4
       {
         Arch_acpi_tables  = 3,  ///< Firmware ACPI tables.
         Arch_acpi_nvs     = 4,  ///< Firmware reserved address space.
+        Arch_cpu_fw       = 5,  ///< CPU firmware.
       };
 
     private:

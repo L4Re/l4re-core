@@ -64,6 +64,7 @@ enum l4_mem_archspecific_sub_type_common_t
 {
   l4_mem_archspecific_acpi_tables = 3,  /**< Firmware ACPI tables. */
   l4_mem_archspecific_acpi_nvs    = 4,  /**< Firmware reserved address space. */
+  l4_mem_archspecific_cpu_fw      = 5,  /**< CPU firmware. */
 };
 
 
