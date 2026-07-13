@@ -20,7 +20,7 @@
 #include <l4/sys/l4int.h>
 
 /**
- * Capability selector flags.
+ * \defgroup l4_syscall_flags Capability selector flags
  * \ingroup l4_ipc_api
  *
  * These flags determine the concrete operation when a kernel object
@@ -47,7 +47,10 @@
  * - #L4_SYSF_REPLY | #L4_SYSF_SEND | #L4_SYSF_RECV | #L4_SYSF_OPEN_WAIT:
  *   reply to caller and receive from any sending partner;
  *   see #L4_SYSF_REPLY_AND_WAIT
+ *
+ * \{
  */
+
 /**
  * Empty set of flags.
  * \hideinitializer
@@ -130,12 +133,19 @@
  */
 #define L4_SYSF_REPLY_AND_WAIT (L4_SYSF_WAIT | L4_SYSF_SEND | L4_SYSF_REPLY)
 
+/// \}
+
+
 /**
  * \ingroup l4_cap_api
- * Capability index shift. \hideinitializer
+ * Capability index shift; see #l4_cap_idx_t. \hideinitializer
  */
 #define L4_CAP_SHIFT   12UL
-/** \deprecated Superseded by #L4_CAP_OFFSET. */
+/**
+ * \ingroup l4_cap_api
+ * *Deprecated*. \hideinitializer
+ * \deprecated Superseded by #L4_CAP_OFFSET.
+ */
 #define L4_CAP_SIZE    (1UL << L4_CAP_SHIFT)
 /**
  * \ingroup l4_cap_api
@@ -148,7 +158,10 @@
  * \hideinitializer
  */
 #define L4_CAP_MASK    (~0UL << (L4_CAP_SHIFT - 2))
-/** Invalid capability selector. \hideinitializer */
+/**
+ * \ingroup l4_cap_api
+ * Invalid capability selector; see #l4_cap_idx_t. \hideinitializer
+ */
 #define L4_INVALID_CAP (~0UL << (L4_CAP_SHIFT - 1))
 
 #define L4_INVALID_CAP_BIT (1UL << (L4_CAP_SHIFT - 1))
