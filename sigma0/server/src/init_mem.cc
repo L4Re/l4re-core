@@ -12,19 +12,12 @@
 
 #include <l4/cxx/iostream>
 #include <l4/sys/kip>
-#include <l4/sys/kdebug.h>
 
 using L4::Kip::Mem_desc;
 
 void
 init_memory(l4_kernel_info_t *info)
 {
-  if (info->version >> 24 != 0x87 /*KIP_VERSION_FIASCO*/ )
-    {
-      L4::cout << PROG_NAME": is designed to run on FIASCO only\n";
-      l4_kd_enter("FATAL");
-    }
-
 #ifdef ARCH_x86
   char kip_syscalls = info->kip_sys_calls;
 
