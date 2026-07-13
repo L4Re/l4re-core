@@ -1011,7 +1011,6 @@ namespace __format
     __write_escape_seq(_Out __out, uint_least32_t __val,
 		       basic_string_view<_CharT> __prefix)
     {
-      using _Str_view = basic_string_view<_CharT>;
       constexpr size_t __max = 8;
       char __buf[__max];
       const string_view __narrow(
@@ -1026,10 +1025,10 @@ namespace __format
 #ifdef _GLIBCXX_USE_WCHAR_T
       else
 	{
-	  _CharT __wbuf[__max];
+	  wchar_t __wbuf[__max];
 	  const size_t __n = __narrow.size();
 	  std::__to_wstring_numeric(__narrow.data(), __n, __wbuf);
-	  __out = __format::__write(__out, _Str_view(__wbuf, __n));
+	  __out = __format::__write(__out, wstring_view(__wbuf, __n));
 	}
 #endif
       *__out = _Separators<_CharT>::_S_braces()[1];
