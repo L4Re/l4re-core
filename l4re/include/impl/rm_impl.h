@@ -139,7 +139,7 @@ Rm::page_in(l4_addr_t start, unsigned long size, Rm::Region_flags rights,
           err < 0)
         return err;
 
-      // ITAS, which is in the same task, will let us jump to the hander. That
+      // ITAS, which is in the same task, will let us jump to the handler. That
       // way, the thread itself will do the work. The helper is supposed to
       // handle the full range...
       if (helper)
