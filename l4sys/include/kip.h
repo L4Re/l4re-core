@@ -140,7 +140,7 @@ L4_INLINE l4_kernel_info_t const *l4_kip(void) L4_NOTHROW;
  *
  * \param kip  Kernel Info Page.
  *
- * \return Kernel version string. 0 if KIP could not be mapped.
+ * \return Kernel version.
  */
 L4_INLINE l4_umword_t l4_kip_version(l4_kernel_info_t const *kip) L4_NOTHROW;
 
