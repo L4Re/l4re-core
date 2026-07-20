@@ -87,9 +87,21 @@ int fstat(int fd, struct stat *buf) noexcept(noexcept(fstat(fd, buf)))
 #endif
 
 #ifdef CONFIG_L4_LIBC_MUSL
+// musl's internal code references __fstat directly. The public fstat symbol is
+// provided either by the wrapper above or, when stat==stat64 (LFS), by the
+// L4B_REDIRECT further down. On 32-bit (time64) architectures the fstat C
+// identifier is asm-redirected by <sys/stat.h> to __fstat_time64, so a plain
+// alias to the literal name "fstat" would dangle. Define __fstat as a thin
+// wrapper that calls fstat through the C identifier, which resolves to the
+// correct (possibly redirected) symbol on every architecture.
 L4_BEGIN_DECLS
-L4_STRONG_ALIAS(fstat, __fstat)
+int __fstat(int fd, struct stat *buf) L4_NOTHROW;
 L4_END_DECLS
+
+int __fstat(int fd, struct stat *buf) L4_NOTHROW
+{
+  return fstat(fd, buf);
+}
 #endif
 
 #define ERRNO_RET(r) do { \
