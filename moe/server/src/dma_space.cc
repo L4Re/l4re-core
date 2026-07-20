@@ -35,7 +35,7 @@ L4Re::Dma_space::Dma_addr trunc_dma_addr(L4Re::Dma_space::Dma_addr addr,
 bool round_dma_size(L4Re::Dma_space::Dma_size *size,
                     unsigned char align = L4_PAGESHIFT)
 {
-  if (align < L4_PAGESHIFT || align > 30)
+  if (align < L4_PAGESHIFT || align > Moe::Max_phys_page_order)
     return false;
 
   auto n = L4::round_order(*size, align);
@@ -52,7 +52,7 @@ bool round_dma_size(L4Re::Dma_space::Dma_size *size,
 bool align_start_chk(L4Re::Dma_space::Dma_addr *addr,
                      unsigned char align = L4_PAGESHIFT)
 {
-  if (align < L4_PAGESHIFT || align > 30)
+  if (align < L4_PAGESHIFT || align > Moe::Max_phys_page_order)
     return false;
 
   auto n = L4::round_order(*addr, align);
@@ -69,7 +69,7 @@ bool align_start_chk(L4Re::Dma_space::Dma_addr *addr,
 bool align_end_chk(L4Re::Dma_space::Dma_addr *addr,
                    unsigned char align = L4_PAGESHIFT)
 {
-  if (align < L4_PAGESHIFT || align > 30)
+  if (align < L4_PAGESHIFT || align > Moe::Max_phys_page_order)
     return false;
 
   auto n = L4::trunc_order(*addr + 1U, align) - 1U;

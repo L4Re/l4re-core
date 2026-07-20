@@ -43,7 +43,7 @@ Moe::Dataspace_cont::address(l4_addr_t offset,
   l4_addr_t adr = l4_addr_t(_start) + offset;
   unsigned char order = L4_PAGESHIFT;
 
-  while (order < 30 /* limit to 1GB flexpage */)
+  while (order < Moe::Max_phys_page_order)
     {
       l4_addr_t map_base = l4_trunc_size(adr, order + 1);
       if (map_base < l4_addr_t(_start))

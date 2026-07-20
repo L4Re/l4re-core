@@ -145,7 +145,7 @@ static void find_memory()
   if (!Single_page_alloc_base::can_free)
     info.printf("Fiasco mapdb not available! Memory cannot be given back!\n");
 
-  for (unsigned order = 30 /*1G*/; order >= L4_LOG2_PAGESIZE; --order)
+  for (unsigned order = Moe::Max_phys_page_order; order >= L4_LOG2_PAGESIZE; --order)
     {
       while (!l4sigma0_map_anypage(Sigma0_cap, 0, L4_WHOLE_ADDRESS_SPACE,
                                    &addr, order))
