@@ -12,7 +12,8 @@
 /* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
 /* GNU Library General Public License for more details.                 */
 
-#if !defined _BITS_TYPES_H && !defined _PTHREAD_H && !defined _INTERNALS_H
+#if !defined _BITS_TYPES_H && !defined _PTHREAD_H && !defined _INTERNALS_H \
+ && !defined _SEMAPHORE_H
 # error "Never include <bits/pthreadtypes.h> directly; use <sys/types.h> instead."
 #endif
 
