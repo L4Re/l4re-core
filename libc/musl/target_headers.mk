@@ -1,3 +1,10 @@
+define HDR_mips
+  sgidefs.h
+  sys/asm.h
+  sys/regdef.h
+  sys/tas.h
+endef
+
 define HDR_common
   alloca.h
   arpa/inet.h
