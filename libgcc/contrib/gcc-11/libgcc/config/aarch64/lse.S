@@ -343,7 +343,7 @@ ENDFN	NAME(LDNM)
   .word value;				\
   .word 0;
 
-#if defined(__linux__) || defined(__FreeBSD__)
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__l4re__)
 .section .note.GNU-stack, "", %progbits
 
 /* Add GNU property note if built with branch protection.  */

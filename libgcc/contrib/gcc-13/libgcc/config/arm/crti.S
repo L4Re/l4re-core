@@ -21,7 +21,7 @@
 # <http://www.gnu.org/licenses/>.
 
 /* An executable stack is *not* required for these functions.  */
-#if defined(__ELF__) && defined(__linux__)
+#if defined(__ELF__) && (defined(__linux__) || defined(__l4re__))
 .section .note.GNU-stack,"",%progbits
 .previous
 #endif

@@ -92,7 +92,7 @@
   .word 0;				\
   .previous
 
-#if defined(__linux__) || defined(__FreeBSD__)
+#if defined(__linux__) || defined(__FreeBSD__) || defined(__l4re__)
 /* Do not require executable stack.  */
 .section .note.GNU-stack, "", %progbits
 .previous

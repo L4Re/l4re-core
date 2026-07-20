@@ -27,10 +27,10 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 	.syntax unified
 
 /* An executable stack is *not* required for these functions.  */
-#if defined(__ELF__) && defined(__linux__)
+#if defined(__ELF__) && (defined(__linux__) || defined(__l4re__))
 .section .note.GNU-stack,"",%progbits
 .previous
-#endif  /* __ELF__ and __linux__ */
+#endif  /* __ELF__ and (__linux__ or __l4re__) */
 
 #ifdef __ARM_EABI__
 /* Some attributes that are common to all routines in this file.  */
