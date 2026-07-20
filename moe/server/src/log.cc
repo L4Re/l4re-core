@@ -99,7 +99,7 @@ Moe::Log::op_dispatch(l4_utcb_t *utcb, l4_msgtag_t tag, L4::Vcon::Rights)
   L4::Opcode op = m->mr[0];
 
   // we only have one opcode
-  if (op != L4Re::Log_::Print)
+  if (op != L4_VCON_WRITE_OP)
     return l4_msgtag(-L4_ENOSYS, 0, 0, 0);
 
   char *msg = log_buffer;
