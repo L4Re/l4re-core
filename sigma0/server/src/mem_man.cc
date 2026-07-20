@@ -186,21 +186,21 @@ Mem_man::alloc_from(Region const *r2, Region const &_r)
   return true;
 }
 
-unsigned long
+bool
 Mem_man::alloc(Region const &r)
 {
   if (!r.valid())
-    return ~0UL;
+    return false;
   Region const *r2 = find(r);
   if (!r2)
-    return ~0UL;
+    return false;
 
   if (0)
     L4::cout << "alloc_from(" << *r2 << ", " << r << ")\n";
   if (!alloc_from(r2, r))
-    return ~0UL;
+    return false;
 
-  return r.start();
+  return true;
 }
 
 /**

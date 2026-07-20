@@ -127,8 +127,9 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *answe
     {
     case Ram:
       mem_flags = L4_FPAGE_RWX;
-      addr = Mem_man::ram()->alloc(Region::start_order(send_addr, send_order,
-                                                       client_id));
+      if (Mem_man::ram()->alloc(Region::start_order(send_addr, send_order,
+                                                    client_id)))
+        addr = send_addr;
       break;
     case Io_mem:
       cached = false;

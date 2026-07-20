@@ -36,9 +36,7 @@ void handle_io_page_fault(l4_umword_t t, l4_utcb_t *utcb, Answer *a)
   port = l4_fpage_ioport(fp) << PORT_SHIFT;
   order = l4_fpage_order(fp) + PORT_SHIFT;
 
-  unsigned long i =
-    io_ports.alloc(Region::start_order(port, order, t, L4_FPAGE_RW));
-  if (i == port)
+  if (io_ports.alloc(Region::start_order(port, order, t, L4_FPAGE_RW)))
     a->snd_fpage(l4_iofpage(port >> PORT_SHIFT, order - PORT_SHIFT));
   else
     a->error(L4_ENOMEM);
