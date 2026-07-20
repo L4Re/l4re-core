@@ -22,6 +22,7 @@
 #define _PT_MACHINE_H   1
 
 # include <features.h>
+# include <l4/sys/compiler.h>
 
 #ifndef __ASSEMBLER__
 # include <stddef.h>	/* For offsetof.  */
@@ -29,18 +30,8 @@
 //# include <asm/prctl.h>
 
 
-# ifndef PT_EI
-#  define PT_EI __extern_always_inline
-# endif
-
-
-#ifndef L4_TO_ADDED_AVOID_WARNINGS
-extern long int testandset (int *spinlock);
-extern int __compare_and_swap (long int *p, long int oldval, long int newval);
-#endif
-
 /* Spinlock implementation; required.  */
-PT_EI long int
+L4_INLINE long int
 testandset (int *spinlock)
 {
   long int ret;
@@ -58,7 +49,7 @@ testandset (int *spinlock)
 /* Compare-and-swap for semaphores.  */
 # define HAS_COMPARE_AND_SWAP
 
-PT_EI int
+L4_INLINE int
 __compare_and_swap (long int *p, long int oldval, long int newval)
 {
   char ret;

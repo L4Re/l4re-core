@@ -79,6 +79,9 @@ ptlc_allocate_tls(void)
   pthread_descr new = __copy_tls(map);
   // NOTE: Same as in __init_tp...
   pthread_libc_data_t *new_libc_data = __pthread_descr_libc_data(new);
+#if TLS_TCB_AT_TP
+  new_libc_data->self_tp = new;
+#endif
   new_libc_data->map_base = map;
   new_libc_data->map_size = libc.tls_size;
   new_libc_data->locale = &libc.global_locale;

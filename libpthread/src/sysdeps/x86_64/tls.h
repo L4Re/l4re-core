@@ -27,8 +27,6 @@
 # include <stdint.h>
 # include <stdlib.h>
 //l4/# include <sysdep.h>
-# include <bits/kernel-features.h>
-# include <bits/wordsize.h>
 
 #if 0 // l4
 // See #CD-999:

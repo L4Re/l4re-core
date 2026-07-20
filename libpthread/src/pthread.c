@@ -253,10 +253,6 @@ int __pthread_initialize_manager(void)
   mgr = ptlc_tls_tp_to_thread_descr(tls_tp);
 
   /* Initialize the descriptor.  */
-#if TLS_TCB_AT_TP
-  mgr->header.tcb = tls_tp;
-  mgr->header.self = mgr;
-#endif
   mgr->p_start_args = (struct pthread_start_args) PTHREAD_START_ARGS_INITIALIZER(__pthread_manager);
 #if __LT_SPINLOCK_INIT != 0
   self->p_resume_count = (struct pthread_atomic) __ATOMIC_INITIALIZER;

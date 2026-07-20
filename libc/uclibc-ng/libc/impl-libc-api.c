@@ -78,7 +78,17 @@ ptlc_become_threaded(void)
 void *
 ptlc_allocate_tls(void)
 {
-  return _dl_allocate_tls(NULL);
+  void *tls_tp = _dl_allocate_tls(NULL);
+  if (!tls_tp)
+    return NULL;
+
+#if TLS_TCB_AT_TP
+  pthread_descr new_thread = ptlc_tls_tp_to_thread_descr(tls_tp);
+  new_thread->header.tcb = tls_tp;
+  new_thread->header.self = new_thread;
+#endif
+
+  return tls_tp;
 }
 
 void
