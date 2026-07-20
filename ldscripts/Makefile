@@ -39,6 +39,12 @@ LIBCSRC_DIR ?= $(PKGDIR)/../libc/$(CONFIG_L4_LIBC)
 include $(LIBCSRC_DIR)/make_vars.mk
 include $(LIBCSRC_DIR)/sources.mk
 
+# The linker scripts are preprocessed and use the bare CPU family name (e.g.
+# 'mips' in OUTPUT_ARCH(mips)), which is also a predefined compiler macro that
+# must be undefined. That family name is LIBC_ARCH_FAMILY, which differs from
+# the (possibly ABI-specific) LIBC_ARCH e.g. for MIPS n64 (mips64 vs mips).
+LIBC_ARCH_FAMILY ?= $(LIBC_ARCH)
+
 INSTALL_TARGET	= $(LD_SCRIPTS) crti.o crtn.o crt1.o crti.s.o crtn.s.o crt1.s.o crt1.p.o
 DEFINES_crt1.s.o += -fPIE
 DEFINES_crt1.p.o += -fPIE
@@ -107,7 +113,7 @@ crti.o: crti_s.o $(if $(CONFIG_MMU),kip_addr.o)
 	      -DCONFIG_BID_STATIC_HEAP=$(if $(CONFIG_BID_STATIC_HEAP),1,0) \
 	      -DCONFIG_BID_STATIC_STACK=$(if $(CONFIG_BID_STATIC_STACK),1,0) \
 	      -DCONFIG_MMU=$(if $(CONFIG_MMU),1,0) \
-	      -Wno-trigraphs -U$(LIBC_ARCH) $(CFLAGS) -P \
+	      -Wno-trigraphs -U$(LIBC_ARCH_FAMILY) $(CFLAGS) -P \
 	      $(if $(filter lld,$(BID_LD_TYPE)),-DLD_LLD=1) $< -o $@
 
 clean::

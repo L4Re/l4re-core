@@ -17,13 +17,17 @@ LIBCSRC_DIR ?= $(PKGDIR)/../libc/$(CONFIG_L4_LIBC)
 
 include $(LIBCSRC_DIR)/make_vars.mk
 
+# The sysdeps of a CPU family are shared across its ABIs. Fall back to
+# LIBC_ARCH for libcs that do not distinguish an ABI-agnostic family name.
+LIBC_ARCH_FAMILY ?= $(LIBC_ARCH)
+
 LDSODIR    = $(CONTRIB_DIR)/ldso/ldso
 
 SRC_CC_libc_pthread   = manager.cc l4.cc pi_mutex_mem.cc
 SRC_C_libc_pthread   += spinlock.c mutex.c condvar.c rwlock.c specific.c \
                         semaphore.c attr.c barrier.c join.c pthread.c \
                         cancel.c signals.c \
-                        sysdeps/$(LIBC_ARCH)/pspinlock.c
+                        sysdeps/$(LIBC_ARCH_FAMILY)/pspinlock.c
 SRC_S_libc_pthread    = tramp-$(ARCH).S
 
 SRC_C_libc_pthread.p.a  += $(SRC_C_libc_pthread)

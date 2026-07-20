@@ -14,18 +14,31 @@ LIBC_DST_DIR  := $(OBJ_DIR)/src
 PTHLIB_DIR    := $(PKGDIR)/../libpthread
 
 # include directory for pthread internals
-PTHREAD_INCDIR  = $(PTHLIB_DIR)/src/sysdeps/$(LIBC_ARCH) $(PTHLIB_DIR)/src
+PTHREAD_INCDIR  = $(PTHLIB_DIR)/src/sysdeps/$(LIBC_ARCH_FAMILY) $(PTHLIB_DIR)/src
 PRIVATE_INCDIR += $(LIBCSRC_DIR)/libc/includes
 
 LIBC_DYNLINKER = /rom/libc.so.1
 
+# LIBC_ARCH selects the (ABI-specific) musl contrib arch directory
+# (contrib/musl/arch/<LIBC_ARCH> and contrib/musl/src/*/<LIBC_ARCH>).
 LIBC_ARCH_x86 := i386
 LIBC_ARCH_arm := arm
 LIBC_ARCH_arm64 := aarch64
 LIBC_ARCH_amd64 := x86_64
-LIBC_ARCH_mips := mips
+# MIPS has one musl arch dir per ABI: o32 -> mips, n32 -> mipsn32, n64 -> mips64.
+LIBC_ARCH_mips_32 := mips
+LIBC_ARCH_mips_n32 := mipsn32
+LIBC_ARCH_mips_64 := mips64
+LIBC_ARCH_mips := $(LIBC_ARCH_mips_$(CPU_ABI))
 LIBC_ARCH_riscv := riscv$(BITS)
 
 LIBC_ARCH := $(LIBC_ARCH_$(BUILD_ARCH))
+
+# LIBC_ARCH_FAMILY is the ABI-agnostic CPU family name used for the L4Re-provided
+# glue that is written to cover all ABIs of a CPU family via the preprocessor
+# (libc/ARCH-<family> and libpthread sysdeps/<family>). It matches LIBC_ARCH for
+# every arch except MIPS, whose glue lives in the shared 'mips' directories.
+LIBC_ARCH_FAMILY_mips := mips
+LIBC_ARCH_FAMILY := $(or $(LIBC_ARCH_FAMILY_$(BUILD_ARCH)),$(LIBC_ARCH))
 
 -include $(DEPSVAR)
