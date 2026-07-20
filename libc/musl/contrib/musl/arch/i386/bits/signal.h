@@ -47,15 +47,23 @@ enum { REG_SS = 18 };
 #define REG_SS REG_SS
 #endif
 
+struct _fpstate {
+	unsigned short cwd, swd, ftw, fop;
+	unsigned long fip, fcs, foo, fos, mxcsr, mxcr_mask;
+	struct {
+		unsigned short significand[4];
+		unsigned short exponent;
+		unsigned short padding[3];
+	} _st[8];
+	struct {
+		unsigned long element[4];
+	} _xmm[8];
+	unsigned long padding[44];
+} __attribute__((aligned(16)));
+
 #if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 typedef int greg_t, gregset_t[19];
-typedef struct _fpstate {
-	unsigned long cw, sw, tag, ipoff, cssel, dataoff, datasel;
-	struct {
-		unsigned short significand[4], exponent;
-	} _st[8];
-	unsigned long status;
-} *fpregset_t;
+typedef struct _fpstate *fpregset_t;
 struct sigcontext {
 	unsigned short gs, __gsh, fs, __fsh, es, __esh, ds, __dsh;
 	unsigned long edi, esi, ebp, esp, ebx, edx, ecx, eax;
@@ -89,7 +97,7 @@ typedef struct __ucontext {
 	stack_t uc_stack;
 	mcontext_t uc_mcontext;
 	sigset_t uc_sigmask;
-	unsigned long __fpregs_mem[28];
+	struct _fpstate __fpregs_mem;
 } ucontext_t;
 
 #define SA_NOCLDSTOP  1
