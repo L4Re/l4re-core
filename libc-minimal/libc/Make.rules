@@ -25,6 +25,8 @@ include $(LIBCSRC_DIR)/sources.mk
 
 DEFINES-$(CONFIG_BID_PIE) += -DSTATIC_PIE
 
+CFLAGS_arm += -mno-unaligned-access
+CXXFLAGS_arm += -mno-unaligned-access
 CFLAGS_arm64 += -mstrict-align
 CXXFLAGS_arm64 += -mstrict-align
 
