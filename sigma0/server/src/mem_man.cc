@@ -15,30 +15,52 @@
 
 Mem_man Mem_man::_ram;
 
+/**
+ * Find an existing region which contains `r` ignoring region owner and rights.
+ *
+ * \param[in] r  The region to search for.
+ *
+ * \returns A region if a suitable region was found or nullptr if no such region
+ *          was found.
+ */
 Region const *
 Mem_man::find(Region const &r, bool force) const
 {
   if (!r.valid())
-    return 0;
+    return nullptr;
 
   Tree::Const_iterator n = _tree.find(r);
   if (n == _tree.end())
-    return 0;
+    return nullptr;
 
   if (n->contains(r) || force)
     return &(*n);
 
-  return 0;
+  return nullptr;
 }
 
+/**
+ * Add a new region to the list of regions.
+ *
+ * If possible, merge the new region with an existing region if the new region
+ * ends immediately before or starts immediately after an existing region with
+ * the same owner and the same rights.
+ *
+ * \return true   The region was added.
+ * \return false  The region was not added due to lack of memory when allocating
+ *                the new tree node.
+ */
 bool
 Mem_man::add(Region const &r)
 {
-  /* try to merge with prev region */
+  /* try to merge with previous region */
   Region rs = r;
   if (rs.start() > 0)
     {
-      rs.start(rs.start()-1);
+      /* Required because r.end = r.start + size - 1. Actually this decreases
+       * r.start by 0x1000, not 1, because Region::start() rounds down to the
+       * next 4K boundary, but that doesn't matter. */
+      rs.start(rs.start() - 1);
 
       Tree::Node n = _tree.find_node(rs);
       if (n && n->owner() == r.owner() && n->rights() == r.rights())
@@ -58,7 +80,8 @@ Mem_man::add(Region const &r)
   rs = r;
   if (rs.end() + 1 != 0)
     {
-      rs.end(rs.end()+1);
+      /* required because r.end = r.start + size - 1 */
+      rs.end(rs.end() + 1);
 
       Tree::Node n = _tree.find_node(rs);
       if (n && n->owner() == r.owner() && n->rights() == r.rights())
@@ -88,6 +111,11 @@ Mem_man::add(Region const &r)
   return true;
 }
 
+/**
+ * Add region `r` to list of free regions.
+ *
+ * \param[in]  r Region to add.
+ */
 bool
 Mem_man::add_free(Region const &r)
 {
@@ -119,6 +147,15 @@ Mem_man::add_free(Region const &r)
   return add(r);
 }
 
+/**
+ * Allocate region `r` from region `r2`.
+ *
+ * \param[in,out] r2  Region to allocate `r` from.
+ * \param[in]     _r  Region.
+ *
+ * \return true   The region was allocated.
+ * \return false  The region was not allocated.
+ */
 bool
 Mem_man::alloc_from(Region const *r2, Region const &_r)
 {
@@ -153,12 +190,14 @@ Mem_man::alloc_from(Region const *r2, Region const &_r)
 
   if (r.start() == r2->start())
     {
+      /* existing region now starts right after new region */
       r2->start(r.end() + 1);
       if (0)
         L4::cout << "move start to " << *r2 << '\n';
     }
   else if (r.end() == r2->end())
     {
+      /* existing region now ends right before new region */
       r2->end(r.start() - 1);
       if (0)
         L4::cout << "shrink end to " << *r2 << '\n';
@@ -186,6 +225,15 @@ Mem_man::alloc_from(Region const *r2, Region const &_r)
   return true;
 }
 
+/**
+ * Lookup the region containing `r` and, if found, remove the memory range
+ * described by `r` from the found region.
+ *
+ * \param[in] r   Region to allocate.
+ *
+ * \return true   The region was allocated.
+ * \return false  The region was not allocated.
+ */
 bool
 Mem_man::alloc(Region const &r)
 {
@@ -206,13 +254,13 @@ Mem_man::alloc(Region const &r)
 /**
  * Allocate region from its containing region and inherit its rights.
  *
- * @param[in] r        Region to allocate. Its rights are the necessary minimal
+ * \param[in] r        Region to allocate. Its rights are the necessary minimal
  *                     rights of the containing region.
- * @param[out] rights  Address of the variable that will receive the full rights
+ * \param[out] rights  Address of the variable that will receive the full rights
  *                     of the containing region.
  *
- * @retval true   The region was allocated.
- * @retval false  The region was not allocated.
+ * \retval true   The region was allocated.
+ * \retval false  The region was not allocated.
  */
 bool
 Mem_man::alloc_get_rights(Region const &r, L4_fpage_rights *rights)
@@ -232,9 +280,11 @@ Mem_man::alloc_get_rights(Region const &r, L4_fpage_rights *rights)
 /**
  * Add a reserved memory region into the map.
  *
- * \return true if the region could be reserved, or false in the case
- * of an error. Note, any error is considered fatal and might create
- * an inconsistent / incorrect memory map.
+ * \retval true   The region could be reserved.
+ * \retval false  Error: The region could not be reserved.
+ *
+ * \note Any error is considered fatal and might create an inconsistent /
+ *       incorrect memory map.
  */
 bool
 Mem_man::reserve(Region const &r)
@@ -334,6 +384,16 @@ Mem_man::reserve(Region const &r)
     }
 }
 
+/**
+ * Find a suitable region of at least the size of `2^order` without an assigned
+ * owner.
+ *
+ * \param order  log2() of the requested region size.
+ * \param owner  owner to allocate the new region for.
+ *
+ * \returns the start address of the allocated region or `~0UL` in case no such
+ *          region could be found.
+ */
 unsigned long
 Mem_man::alloc_first(unsigned order, unsigned owner)
 {
@@ -371,6 +431,9 @@ Mem_man::alloc_first(unsigned order, unsigned owner)
   return a.start();
 }
 
+/**
+ * Debug dump.
+ */
 void
 Mem_man::dump()
 {
