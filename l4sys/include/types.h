@@ -372,7 +372,7 @@ L4_INLINE l4_msgtag_t l4_msgtag(long label, unsigned words, unsigned items,
 typedef unsigned long l4_cap_idx_t;
 
 /**
- * Test if a capability selector is the invalid capability.
+ * Test if a capability selector is invalid (i.e., #L4_INVALID_CAP_BIT is set).
  * \ingroup l4_cap_api
  *
  * \param c  Capability selector
@@ -383,7 +383,8 @@ typedef unsigned long l4_cap_idx_t;
 L4_INLINE unsigned l4_is_invalid_cap(l4_cap_idx_t c) L4_NOTHROW;
 
 /**
- * Test if a capability selector is a valid selector.
+ * Test if a capability selector is valid (i.e., #L4_INVALID_CAP_BIT is not
+ * set).
  * \ingroup l4_cap_api
  *
  * \param c  Capability selector

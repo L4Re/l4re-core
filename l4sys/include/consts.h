@@ -164,6 +164,12 @@
  */
 #define L4_INVALID_CAP (~0UL << (L4_CAP_SHIFT - 1))
 
+/**
+ * \ingroup l4_cap_api
+ * Bit indicating if a capability selector is invalid. \hideinitializer
+ *
+ * If the bit is set, the capability selector is considered invalid.
+ */
 #define L4_INVALID_CAP_BIT (1UL << (L4_CAP_SHIFT - 1))
 
 enum l4_sched_consts_t
