@@ -7,6 +7,8 @@
  */
 #pragma once
 
+#include <assert.h>
+
 #include "../sig_arch_ifc.h"
 
 enum : l4_addr_t { Sig_stack_align = 16 };
@@ -88,8 +90,12 @@ void setup_sighandler_frame(l4_exc_regs_t *u, ucontext_t *ucf,
 {
   ucf->uc_mcontext.fpregs = &ucf->__fpregs_mem;
 
-  // Make sure there is enough space for fxsave64...
+  // Make sure there is enough space for fxsave64. Actually, we only need 464
+  // bytes since fxsave64 only writes at most 464 bytes. The memory  needs to
+  // be 16-byte aligned, because the fxsave64 instruction requires that, and
+  // otherwise raises an #GP.
   static_assert(sizeof(ucf->__fpregs_mem) >= 464);
+  assert(reinterpret_cast<l4_addr_t>(&ucf->__fpregs_mem) % 16 == 0);
 
   // x86 also assumes a 16 byte aligned stack...
   l4_umword_t *sp = reinterpret_cast<l4_umword_t *>(ucf);
