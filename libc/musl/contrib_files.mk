@@ -337,6 +337,7 @@ define SRC_fenv
   fegetexceptflag
   feholdexcept
   fenv
+  $(if $(filter arm,$(BUILD_ARCH)),fenv-hf)
   fesetexceptflag
   fesetround
   feupdateenv
@@ -349,6 +350,7 @@ endef
 
 define SRC_ldso
   dl_iterate_phdr
+  $(if $(filter arm,$(BUILD_ARCH)),find_exidx)
 endef
 
 define SRC_ldso_libc.so
@@ -370,6 +372,7 @@ define SRC_exit
   assert
   atexit
   exit
+  $(if $(filter arm,$(BUILD_ARCH)),__aeabi_atexit)
 endef
 
 define SRC_multibyte

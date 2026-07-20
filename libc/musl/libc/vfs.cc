@@ -98,12 +98,6 @@ extern "C" void __cxa_pure_virtual(void)
   l4_sleep_forever();
 }
 
-#ifdef __ARM_EABI__
-extern "C" void __aeabi_atexit(void);
-extern "C" void __aeabi_atexit(void)
-{}
-#endif
-
 #include <l4/l4re_vfs/impl/ns_fs_impl.h>
 #include <l4/l4re_vfs/impl/ds_file_impl.h>
 #include <l4/l4re_vfs/impl/fd_store_impl.h>
