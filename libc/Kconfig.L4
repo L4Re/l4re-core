@@ -5,7 +5,8 @@ config L4_LIBC_UCLIBC
   bool "uclibc-ng"
 
 config L4_LIBC_MUSL
-  bool "musl" if EXPERIMENTAL && (BUILD_ARCH_arm64 || BUILD_ARCH_amd64)
+  bool "musl" if EXPERIMENTAL && (   BUILD_ARCH_arm64 || BUILD_ARCH_amd64 \
+                                  || BUILD_ARCH_x86)
 
 endchoice
 
