@@ -47,18 +47,20 @@ void dump_all()
 }
 
 static
-void map_kip(Answer *a)
+void
+map_kip(Answer *answer)
 {
 #ifdef CONFIG_MMU
-  a->snd_fpage(reinterpret_cast<l4_umword_t>(l4_info), L4_LOG2_PAGESIZE,
-               L4_FPAGE_RX, true);
+  answer->snd_fpage(reinterpret_cast<l4_umword_t>(l4_info), L4_LOG2_PAGESIZE,
+                    L4_FPAGE_RX, true);
 #else
-  a->snd_addr(reinterpret_cast<l4_umword_t>(l4_info));
+  answer->snd_addr(reinterpret_cast<l4_umword_t>(l4_info));
 #endif
 }
 
 static
-void new_client(Answer *a)
+void
+new_client(Answer *answer)
 {
   // The kernel passed a Sigma0 IPC gate with an IPC label 4<<4 (0x40) to Moe.
   // Actually IPC labels < L4_BASE_CAPS_LAST are reserved for Moe.
@@ -67,36 +69,37 @@ void new_client(Answer *a)
 
   if ((_next_gate >> L4_CAP_SHIFT) & ~Region::Owner_mask)
     {
-      a->error(L4_ENOMEM);
+      answer->error(L4_ENOMEM);
       return;
     }
 
   l4_factory_create_gate_u(L4_BASE_FACTORY_CAP, _next_gate,
-                           L4_BASE_THREAD_CAP, (_next_gate >> L4_CAP_SHIFT) << 4, a->utcb);
-  a->snd_fpage(l4_obj_fpage(_next_gate, 0, L4_CAP_FPAGE_RWS));
+                           L4_BASE_THREAD_CAP, (_next_gate >> L4_CAP_SHIFT) << 4,
+                           answer->utcb);
+  answer->snd_fpage(l4_obj_fpage(_next_gate, 0, L4_CAP_FPAGE_RWS));
   _next_gate += L4_CAP_OFFSET;
   return;
 }
 
 static
-void map_free_page(unsigned order, l4_umword_t client_id, Answer *a)
+void map_free_page(unsigned order, l4_umword_t client_id, Answer *answer)
 {
   if (order < L4_PAGESHIFT)
     {
-      a->error(L4_EINVAL);
+      answer->error(L4_EINVAL);
       return;
     }
 
   unsigned long addr = Mem_man::ram()->alloc_first(order, client_id);
   if (addr != ~0UL)
-    a->snd_fpage(addr, order, L4_FPAGE_RWX, true);
+    answer->snd_fpage(addr, order, L4_FPAGE_RWX, true);
   else
-    a->error(L4_ENOMEM);
+    answer->error(L4_ENOMEM);
 }
 
 
 static
-void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *an)
+void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *answer)
 {
   unsigned long send_addr = l4_fpage_memaddr(fp);
   unsigned send_order = l4_fpage_order(fp);
@@ -105,14 +108,14 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *an)
   // will otherwise truncate the send address. Fail in case it is not aligned.
   if (l4_trunc_size(send_addr, send_order) != send_addr)
     {
-      an->error(L4_EINVAL);
+      answer->error(L4_EINVAL);
       return;
     }
 
   // Isolation is only enforced at page granularity. Deny smaller requests.
   if (send_order < L4_PAGESHIFT)
     {
-      an->error(L4_EINVAL);
+      answer->error(L4_EINVAL);
       return;
     }
 
@@ -143,17 +146,17 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *an)
         break;
       }
     default:
-      an->error(L4_EINVAL);
+      answer->error(L4_EINVAL);
       return;
     }
 
   if (addr == ~0UL)
     {
-      an->error(L4_ENOMEM);
+      answer->error(L4_ENOMEM);
       return;
     }
 
-  an->snd_fpage(addr, send_order, mem_flags, cached);
+  answer->snd_fpage(addr, send_order, mem_flags, cached);
 }
 
 /* handler for page fault requests */
