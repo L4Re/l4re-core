@@ -60,6 +60,9 @@ void map_kip(Answer *a)
 static
 void new_client(Answer *a)
 {
+  // The kernel passed a Sigma0 IPC gate with an IPC label 4<<4 (0x40) to Moe.
+  // Actually IPC labels < L4_BASE_CAPS_LAST are reserved for Moe.
+
   static l4_cap_idx_t _next_gate = L4_BASE_CAPS_LAST + L4_CAP_OFFSET;
 
   if ((_next_gate >> L4_CAP_SHIFT) & ~Region::Owner_mask)
