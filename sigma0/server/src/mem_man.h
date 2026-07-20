@@ -41,7 +41,7 @@ public:
   bool add_free(Region const &r);
   Region const *find(Region const &r, bool force = false) const;
 
-  unsigned long alloc_first(unsigned order, unsigned owner = sigma0_taskno);
+  unsigned long alloc_first(unsigned order, unsigned owner);
 
   void dump();
 };
