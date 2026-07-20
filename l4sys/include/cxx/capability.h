@@ -344,7 +344,11 @@ public:
   /**
    * \brief Member access of a `T`.
    */
-  T *operator -> () const noexcept { return reinterpret_cast<T*>(_c); }
+  T *operator -> () const noexcept
+  {
+    static_assert(sizeof(_c) <= sizeof(T*));
+    return reinterpret_cast<T*>(_c);
+  }
 };
 
 
