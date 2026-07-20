@@ -126,7 +126,8 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
     {
     case Ram:
       mem_flags = L4_FPAGE_RWX;
-      addr = Mem_man::ram()->alloc(Region::bs(send_addr, 1UL << send_order, t));
+      addr = Mem_man::ram()->alloc(Region::start_size(send_addr,
+                                                      1UL << send_order, t));
       break;
     case Io_mem:
       cached = false;
@@ -134,7 +135,7 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
     case Io_mem_cached:
       {
         // there is no first-come, first-serve for IO memory
-        Region r = Region::bs(send_addr, 1UL << send_order);
+        Region r = Region::start_size(send_addr, 1UL << send_order);
         Region const *p = iomem.find(r);
         if (p)
           {
@@ -170,7 +171,7 @@ handle_page_fault(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
                                   : (write ? L4_FPAGE_RW : L4_FPAGE_RO);
 
   L4_fpage_rights rights;
-  Region r = Region::bs(l4_trunc_page(pfa), L4_PAGESIZE, t, dr);
+  Region r = Region::start_size(l4_trunc_page(pfa), L4_PAGESIZE, t, dr);
   if (Mem_man::ram()->alloc_get_rights(r, &rights))
     {
       answer->snd_fpage(r.start(), L4_LOG2_PAGESIZE, rights, true);

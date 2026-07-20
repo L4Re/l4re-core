@@ -52,8 +52,9 @@ public:
 
   static Region invalid() { return Region(~0UL, 0); }
 
-  static Region bs(unsigned long start, unsigned long size, unsigned owner = 0,
-                   L4_fpage_rights rights = L4_FPAGE_RWX)
+  static Region start_size(unsigned long start, unsigned long size,
+                           unsigned owner = 0,
+                           L4_fpage_rights rights = L4_FPAGE_RWX)
   {
     if (size == 0)
       return invalid();
