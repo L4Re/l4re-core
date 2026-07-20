@@ -95,14 +95,21 @@ void *Single_page_alloc_base::_alloc(Nothrow, unsigned long size,
   return ret;
 }
 
-void Single_page_alloc_base::_free(void *p, unsigned long size, bool initial_mem)
+void Single_page_alloc_base::_free(void *p, unsigned long size)
 {
-  if (!initial_mem && !can_free)
+  if (!can_free)
     return;
 
   if (page_alloc_debug)
     L4::cout << "pa(" << __builtin_return_address(0) << "): free(" << size << ") @" << p << '\n';
-  page_alloc()->free(p, size, initial_mem);
+  page_alloc()->free(p, size);
+}
+
+void Single_page_alloc_base::_add_mem(void *p, unsigned long size)
+{
+  if (page_alloc_debug)
+    L4::cout << "pa(" << __builtin_return_address(0) << "): add_mem(" << size << ") @" << p << '\n';
+  page_alloc()->free(p, size, true);
 }
 
 #ifndef NDEBUG

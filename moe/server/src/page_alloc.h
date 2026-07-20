@@ -50,8 +50,10 @@ public:
       throw L4::Out_of_memory();
     return r;
   }
-  static void _free(void *p, unsigned long size, bool initial_mem = false);
+  static void _free(void *p, unsigned long size);
   static unsigned long _avail();
+
+  static void _add_mem(void *p, unsigned long size);
 
 #ifndef NDEBUG
   static void _dump_free(Dbg &dbg);

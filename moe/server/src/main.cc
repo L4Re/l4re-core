@@ -168,8 +168,8 @@ static void find_memory()
           if (addr + size > max_addr)
             max_addr = addr + size;
 
-          Single_page_alloc_base::_free(reinterpret_cast<void*>(addr), size,
-                                        true);
+          Single_page_alloc_base::_add_mem(reinterpret_cast<void *>(addr),
+                                           size);
         }
     }
 
@@ -532,8 +532,8 @@ static void init_emergency_memory()
   [[maybe_unused]] int err =
     l4sigma0_map_anypage(Sigma0_cap, 0, L4_WHOLE_ADDRESS_SPACE, &addr, order);
   l4_assert(!err);
-  Single_page_alloc_base::_free(reinterpret_cast<void *>(addr), 1UL << order,
-                                true);
+  Single_page_alloc_base::_add_mem(reinterpret_cast<void *>(addr),
+                                   1UL << order);
 }
 
 static __attribute__((used, section(".preinit_array")))
