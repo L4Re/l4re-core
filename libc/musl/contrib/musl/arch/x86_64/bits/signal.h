@@ -55,9 +55,7 @@ enum { REG_CR2 = 22 };
 #define REG_CR2 REG_CR2
 #endif
 
-#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
-typedef long long greg_t, gregset_t[23];
-typedef struct _fpstate {
+struct _fpstate {
 	unsigned short cwd, swd, ftw, fop;
 	unsigned long long rip, rdp;
 	unsigned mxcsr, mxcr_mask;
@@ -68,7 +66,11 @@ typedef struct _fpstate {
 		unsigned element[4];
 	} _xmm[16];
 	unsigned padding[24];
-} *fpregset_t;
+} __attribute__((aligned(16)));
+
+#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+typedef long long greg_t, gregset_t[23];
+typedef struct _fpstate *fpregset_t;
 struct sigcontext {
 	unsigned long r8, r9, r10, r11, r12, r13, r14, r15;
 	unsigned long rdi, rsi, rbp, rbx, rdx, rax, rcx, rsp, rip, eflags;
@@ -100,7 +102,7 @@ typedef struct __ucontext {
 	stack_t uc_stack;
 	mcontext_t uc_mcontext;
 	sigset_t uc_sigmask;
-	unsigned long __fpregs_mem[64];
+	struct _fpstate __fpregs_mem;
 } ucontext_t;
 
 #define SA_NOCLDSTOP  1
