@@ -77,13 +77,12 @@ Mem_man::add(Region const &r)
   if (r.owner() == sigma0_taskno)
     return true;
 
-  while (_tree.insert(r).second == -_tree.E_nomem)
-    if (!ram()->morecore())
-      {
-        if (debug_errors)
-          L4::cout << PROG_NAME": Out of memory\n";
-        return false;
-      }
+  if (_tree.insert(r).second == -_tree.E_nomem)
+    {
+      if (debug_errors)
+        L4::cout << PROG_NAME": Out of memory\n";
+      return false;
+    }
 
   return true;
 }
@@ -332,46 +331,6 @@ Mem_man::reserve(Region const &r)
             r2->start(r.end() + 1);
         }
     }
-}
-
-
-bool
-Mem_man::morecore()
-{
-  Tree::Item_type *n = 0;
-  for (Tree::Rev_iterator i = _tree.rbegin(); i != _tree.rend(); ++i)
-    {
-      if (i->owner())
-        continue;
-
-      l4_addr_t st = l4_round_page(i->start());
-
-      if (st < i->end() && i->end() - st >= L4_PAGESIZE - 1)
-        {
-          n = &(*i);
-          break;
-        }
-    }
-
-  if (!n)
-    {
-      if (debug_memory_maps)
-        L4::cout << PROG_NAME": morecore did not find more free memory\n";
-      return false;
-    }
-
-  Region a = Region::bs(l4_round_page(n->end() - L4_PAGESIZE - 1),
-                        L4_PAGESIZE, sigma0_taskno);
-
-  Page_alloc_base::free(reinterpret_cast<void*>(a.start()));
-
-  alloc_from(n, a);
-
-  if (debug_memory_maps)
-    L4::cout << PROG_NAME": morecore: total=" << Page_alloc_base::total() / 1024
-             << " KB avail=" << Page_alloc_base::allocator()->avail() / 1024
-             << " KB: added " << a << '\n';
-  return true;
 }
 
 unsigned long

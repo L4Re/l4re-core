@@ -23,7 +23,6 @@ class Mem_man
 private:
   bool add(Region const &r);
   bool alloc_from(Region const *r2, Region const &r);
-  bool morecore();
 
   static Mem_man _ram;
 
