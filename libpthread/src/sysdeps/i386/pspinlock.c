@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <pthread.h>
 #include "internals.h"
-#include <bits/kernel-features.h>
 
 #include <l4/sys/compiler.h>
 

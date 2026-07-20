@@ -26,7 +26,6 @@
 # include <stdint.h>
 # include <stdlib.h>
 //# include <sysdep.h>
-# include <bits/kernel-features.h>
 
 
 /* Type for the dtv.  */

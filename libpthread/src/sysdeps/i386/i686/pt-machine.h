@@ -22,14 +22,9 @@
 #ifndef _PT_MACHINE_H
 #define _PT_MACHINE_H	1
 
-#ifndef PT_EI
-# define PT_EI __extern_always_inline
-#endif
-//l4/#include <bits/kernel-features.h>
+#include <l4/sys/compiler.h>
 
 #ifndef __ASSEMBLER__
-extern long int testandset (int *spinlock);
-extern int __compare_and_swap (long int *p, long int oldval, long int newval);
 
 /* Get some notion of the current stack.  Need not be exactly the top
    of the stack, just something somewhere in the current frame.  */
@@ -37,7 +32,7 @@ extern int __compare_and_swap (long int *p, long int oldval, long int newval);
 
 
 /* Spinlock implementation; required.  */
-PT_EI long int
+L4_INLINE long int
 testandset (int *spinlock)
 {
   long int ret;
@@ -55,7 +50,7 @@ testandset (int *spinlock)
 /* Compare-and-swap for semaphores.  It's always available on i686.  */
 #define HAS_COMPARE_AND_SWAP
 
-PT_EI int
+L4_INLINE int
 __compare_and_swap (long int *p, long int oldval, long int newval)
 {
   char ret;

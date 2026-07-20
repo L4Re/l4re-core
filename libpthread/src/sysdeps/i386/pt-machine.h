@@ -28,21 +28,15 @@
 #define _PT_MACHINE_H	1
 
 #ifndef __ASSEMBLER__
-#ifndef PT_EI
-# define PT_EI __extern_always_inline
-#endif
+#include <l4/sys/compiler.h>
 
-#ifdef not_for_l4
-extern long int testandset (int *spinlock);
-extern int __compare_and_swap (long int *p, long int oldval, long int newval);
-#endif
 /* Get some notion of the current stack.  Need not be exactly the top
    of the stack, just something somewhere in the current frame.  */
 #define CURRENT_STACK_FRAME  __builtin_frame_address (0)
 
 
 /* Spinlock implementation; required.  */
-PT_EI long int
+L4_INLINE long int
 testandset (int *spinlock)
 {
   long int ret;
@@ -64,7 +58,7 @@ testandset (int *spinlock)
 #define HAS_COMPARE_AND_SWAP
 #define TEST_FOR_COMPARE_AND_SWAP
 
-PT_EI int
+L4_INLINE int
 __compare_and_swap (long int *p, long int oldval, long int newval)
 {
   char ret;
@@ -78,8 +72,8 @@ __compare_and_swap (long int *p, long int oldval, long int newval)
 }
 
 
-PT_EI int get_eflags (void);
-PT_EI int
+L4_INLINE int get_eflags (void);
+L4_INLINE int
 get_eflags (void)
 {
   int res;
@@ -88,16 +82,16 @@ get_eflags (void)
 }
 
 
-PT_EI void set_eflags (int newflags);
-PT_EI void
+L4_INLINE void set_eflags (int newflags);
+L4_INLINE void
 set_eflags (int newflags)
 {
   __asm__ __volatile__ ("pushl %0; popfl" : : "r" (newflags) : "cc");
 }
 
 
-PT_EI int compare_and_swap_is_available (void);
-PT_EI int
+L4_INLINE int compare_and_swap_is_available (void);
+L4_INLINE int
 compare_and_swap_is_available (void)
 {
   int oldflags = get_eflags ();
