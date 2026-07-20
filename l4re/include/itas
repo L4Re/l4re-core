@@ -45,9 +45,9 @@ public:
    * \param thread_cap   The capability of the new thread.
    * \param thread_utcb  The address of the allocated UTCB of the new thread.
    */
-  L4_INLINE_RPC(int, register_thread, (L4::Ipc::Cap<L4::Thread> parent,
-                                       L4::Ipc::Cap<L4::Thread> thread_cap,
-                                       l4_addr_t thread_utcb));
+  L4_INLINE_RPC(l4_ret_t, register_thread, (L4::Ipc::Cap<L4::Thread> parent,
+                                            L4::Ipc::Cap<L4::Thread> thread_cap,
+                                            l4_addr_t thread_utcb));
 
   /**
    * Unregister a thread.
@@ -57,7 +57,7 @@ public:
    *
    * \param thread  The destroyed thread.
    */
-  L4_INLINE_RPC(int, unregister_thread, (L4::Ipc::Cap<L4::Thread> thread));
+  L4_INLINE_RPC(l4_ret_t, unregister_thread, (L4::Ipc::Cap<L4::Thread> thread));
 
   // sigaction.sa_flags is usually `unsigned long`, except for MIPS...
   enum : unsigned
@@ -76,9 +76,9 @@ public:
    * \param[in]  act     New signal action.
    * \param[out] oldact  Old signal action.
    */
-  L4_INLINE_RPC(int, sigaction, (int signum,
-                                 const struct sigaction *act,
-                                 struct sigaction *oldact));
+  L4_INLINE_RPC(l4_ret_t, sigaction, (int signum,
+                                      const struct sigaction *act,
+                                      struct sigaction *oldact));
 
   /**
    * Examine or set alternate POSIX signal stack.
@@ -92,9 +92,9 @@ public:
    * \param[in]  ss      The new sigaltstack.
    * \param[out] oss     The old sigaltstack.
    */
-  L4_INLINE_RPC(int, sigaltstack, (L4::Ipc::Cap<L4::Thread> thread,
-                                   const struct sigaltstack *ss,
-                                   struct sigaltstack *oss));
+  L4_INLINE_RPC(l4_ret_t, sigaltstack, (L4::Ipc::Cap<L4::Thread> thread,
+                                        const struct sigaltstack *ss,
+                                        struct sigaltstack *oss));
 
   /**
    * Examine or set process signal mask.
@@ -110,9 +110,9 @@ public:
    * \param[in]  set     The new signal mask.
    * \param[out] oldset  The old signal mask.
    */
-  L4_INLINE_RPC(int, sigprocmask, (L4::Ipc::Cap<L4::Thread> thread,
-                                   int how, sigset_t const *set,
-                                   sigset_t *oldset));
+  L4_INLINE_RPC(l4_ret_t, sigprocmask, (L4::Ipc::Cap<L4::Thread> thread,
+                                        int how, sigset_t const *set,
+                                        sigset_t *oldset));
 
   /**
    * Query pending signals.
@@ -123,8 +123,8 @@ public:
    *                     examined.
    * \param[out] set     Pending signals of thread.
    */
-  L4_INLINE_RPC(int, sigpending, (L4::Ipc::Cap<L4::Thread> thread,
-                                  sigset_t *set));
+  L4_INLINE_RPC(l4_ret_t, sigpending, (L4::Ipc::Cap<L4::Thread> thread,
+                                       sigset_t *set));
 
   /**
    * Set process interval timer.
@@ -135,9 +135,9 @@ public:
    * \param[in]  new_value  New timer value.
    * \param[out] old_value  Old timer value.
    */
-  L4_INLINE_RPC(int, setitimer, (int which,
-                                 const struct itimerval *new_value,
-                                 struct itimerval *old_value));
+  L4_INLINE_RPC(l4_ret_t, setitimer, (int which,
+                                      const struct itimerval *new_value,
+                                      struct itimerval *old_value));
 
   /**
    * Get process interval timer.
@@ -147,7 +147,7 @@ public:
    * \param[in]  which       Timer type (`ITIMER_REAL`).
    * \param[out] curr_value  Old timer value.
    */
-  L4_INLINE_RPC(int, getitimer, (int which, struct itimerval *curr_value));
+  L4_INLINE_RPC(l4_ret_t, getitimer, (int which, struct itimerval *curr_value));
 
   /**
    * Send a signal to the calling thread.
@@ -155,7 +155,7 @@ public:
    * \param[in] thread  Thread cap of the calling thread.
    * \param[in] sig     Signal that shall be raised.
    */
-  L4_INLINE_RPC(int, raise, (L4::Ipc::Cap<L4::Thread> thread, int sig));
+  L4_INLINE_RPC(l4_ret_t, raise, (L4::Ipc::Cap<L4::Thread> thread, int sig));
 
   typedef L4::Typeid::Rpcs<
     register_thread_t, unregister_thread_t, sigaction_t, sigaltstack_t,
