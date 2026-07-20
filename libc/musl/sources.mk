@@ -23,5 +23,8 @@ SUB_MODULES := $(SUB_MODULES-$(LIBC_BUILD_MODE))
 NAME_crt1        = crt1.c
 NAME_crt1_shared = Scrt1.c
 NAME_crt1_reloc  = rcrt1.c
-NAME_crti        = crti.s
-NAME_crtn        = crtn.s
+# Most arches provide crt/<arch>/crti.s and crtn.s in assembly. Some (e.g.
+# riscv) have no arch-specific version and use the generic crt/crti.c and
+# crt/crtn.c instead.
+NAME_crti        = $(if $(wildcard $(CONTRIB_DIR)/crt/$(LIBC_ARCH)/crti.s),crti.s,crti.c)
+NAME_crtn        = $(if $(wildcard $(CONTRIB_DIR)/crt/$(LIBC_ARCH)/crtn.s),crtn.s,crtn.c)

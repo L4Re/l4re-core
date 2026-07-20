@@ -5,6 +5,10 @@ define HDR_mips
   sys/tas.h
 endef
 
+define HDR_riscv
+  sys/asm.h
+endef
+
 define HDR_common
   alloca.h
   arpa/inet.h

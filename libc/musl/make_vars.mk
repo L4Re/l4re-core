@@ -37,8 +37,10 @@ LIBC_ARCH := $(LIBC_ARCH_$(BUILD_ARCH))
 # LIBC_ARCH_FAMILY is the ABI-agnostic CPU family name used for the L4Re-provided
 # glue that is written to cover all ABIs of a CPU family via the preprocessor
 # (libc/ARCH-<family> and libpthread sysdeps/<family>). It matches LIBC_ARCH for
-# every arch except MIPS, whose glue lives in the shared 'mips' directories.
+# every arch except MIPS and RISC-V, whose ABI-specific LIBC_ARCH (e.g. mips64,
+# riscv64) differs from the shared family directory name (mips, riscv).
 LIBC_ARCH_FAMILY_mips := mips
+LIBC_ARCH_FAMILY_riscv := riscv
 LIBC_ARCH_FAMILY := $(or $(LIBC_ARCH_FAMILY_$(BUILD_ARCH)),$(LIBC_ARCH))
 
 -include $(DEPSVAR)

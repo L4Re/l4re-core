@@ -42,9 +42,9 @@ typedef struct pthread_libc_data
   /* non x86 - the positions of these fields relative to
    * the end of the structure is external and internal ABI. */
 #ifdef TLS_ABOVE_TP
-#ifdef __mips__
-  /* On MIPS the L4 UTCB pointer lives in the TCB area just below the thread
-   * pointer. Populated by ptlc_set_tp(). */
+#if defined(__mips__) || defined(__riscv)
+  /* On MIPS and RISC-V the L4 UTCB pointer lives in the TCB area just below the
+   * thread pointer. Populated by ptlc_set_tp(). */
   void *__l4_utcb;
 #endif
   uintptr_t canary;
