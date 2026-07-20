@@ -20,7 +20,7 @@ static Mem_man io_ports;
 
 void init_io_ports()
 {
-  io_ports.add_free(Region::start_size(0, (64 * 1024) << PORT_SHIFT, 0, L4_FPAGE_RW));
+  io_ports.add_free(Region::start_order(0, 16 + PORT_SHIFT, 0, L4_FPAGE_RW));
 }
 
 void dump_io_ports()
@@ -31,15 +31,15 @@ void dump_io_ports()
 
 void handle_io_page_fault(l4_umword_t t, l4_utcb_t *utcb, Answer *a)
 {
-  unsigned long port, size;
+  unsigned long port, order;
   l4_fpage_t fp = (l4_fpage_t&)l4_utcb_mr_u(utcb)->mr[0];
   port = l4_fpage_ioport(fp) << PORT_SHIFT;
-  size = l4_fpage_order(fp) + PORT_SHIFT;
+  order = l4_fpage_order(fp) + PORT_SHIFT;
 
   unsigned long i =
-    io_ports.alloc(Region::start_size(port, 1UL << size, t, L4_FPAGE_RW));
+    io_ports.alloc(Region::start_order(port, order, t, L4_FPAGE_RW));
   if (i == port)
-    a->snd_fpage(l4_iofpage(port >> PORT_SHIFT, size - PORT_SHIFT));
+    a->snd_fpage(l4_iofpage(port >> PORT_SHIFT, order - PORT_SHIFT));
   else
     a->error(L4_ENOMEM);
 }

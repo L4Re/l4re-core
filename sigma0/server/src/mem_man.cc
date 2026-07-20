@@ -362,8 +362,8 @@ Mem_man::alloc_first(unsigned order, unsigned owner)
   if (!n)
     return ~0UL;
 
-  Region a = Region::start_size(L4::round_order(n->start(), order),
-                                1UL << order, owner);
+  Region a = Region::start_order(L4::round_order(n->start(), order), order,
+                                 owner);
 
   if (!alloc_from(n, a))
     return ~0UL;
