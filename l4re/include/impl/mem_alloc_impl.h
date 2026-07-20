@@ -10,7 +10,6 @@
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
 #include <l4/re/mem_alloc>
-#include <l4/re/mem_alloc-sys.h>
 #include <l4/re/dataspace>
 #include <l4/re/error_helper>
 

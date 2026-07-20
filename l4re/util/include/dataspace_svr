@@ -15,7 +15,6 @@
 #include <l4/sys/types.h>
 #include <l4/cxx/minmax>
 #include <l4/re/dataspace>
-#include <l4/re/dataspace-sys.h>
 #include <l4/sys/cxx/ipc_legacy>
 
 namespace L4Re { namespace Util {

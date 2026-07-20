@@ -10,7 +10,6 @@
 #pragma once
 
 #include <l4/re/event>
-#include <l4/re/event-sys.h>
 #include <l4/re/rm>
 
 #include <string.h>

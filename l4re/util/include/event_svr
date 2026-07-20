@@ -11,7 +11,6 @@
 
 #include <l4/re/event_enums.h>
 #include <l4/re/event>
-#include <l4/re/event-sys.h>
 #include <l4/re/util/icu_svr>
 #include <l4/cxx/minmax>
 

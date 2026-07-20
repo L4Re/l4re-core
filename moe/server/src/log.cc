@@ -6,7 +6,6 @@
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
 #include <l4/re/log>
-#include <l4/re/log-sys.h>
 #include <l4/sys/kdebug.h>
 #include <l4/cxx/minmax>
 
