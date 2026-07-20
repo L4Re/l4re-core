@@ -97,12 +97,6 @@ void map_free_page(unsigned size, l4_umword_t t, Answer *a)
 static
 void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
 {
-  Mem_man *m;
-  L4_fpage_rights mem_flags;
-  bool cached = true;
-  unsigned long addr = ~0UL;
-  Region const *p;
-  Region r;
   unsigned long send_addr = l4_fpage_memaddr(fp);
   unsigned send_order = l4_fpage_order(fp);
 
@@ -121,26 +115,31 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
       return;
     }
 
+  bool cached = true;
+  L4_fpage_rights mem_flags;
+  unsigned long addr = ~0UL;
+
   switch (fn)
     {
     case Ram:
-      m = Mem_man::ram();
       mem_flags = L4_FPAGE_RWX;
-      addr = m->alloc(Region::bs(send_addr, 1UL << send_order, t));
+      addr = Mem_man::ram()->alloc(Region::bs(send_addr, 1UL << send_order, t));
       break;
     case Io_mem:
       cached = false;
       /* fall through */
     case Io_mem_cached:
-      // there is no first-come, first-serve for IO memory
-      r = Region::bs(send_addr, 1UL << send_order);
-      p = iomem.find(r);
-      if (p)
-        {
-          addr = r.start();
-          mem_flags = p->rights();
-        }
-      break;
+      {
+        // there is no first-come, first-serve for IO memory
+        Region r = Region::bs(send_addr, 1UL << send_order);
+        Region const *p = iomem.find(r);
+        if (p)
+          {
+            addr = r.start();
+            mem_flags = p->rights();
+          }
+        break;
+      }
     default:
       an->error(L4_EINVAL);
       return;
