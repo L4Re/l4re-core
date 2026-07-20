@@ -20,7 +20,7 @@ static Mem_man io_ports;
 
 void init_io_ports()
 {
-  io_ports.add_free(Region::kr(0, (64 * 1024) << PORT_SHIFT, 0, L4_FPAGE_RW));
+  io_ports.add_free(Region::bs(0, (64 * 1024) << PORT_SHIFT, 0, L4_FPAGE_RW));
 }
 
 void dump_io_ports()

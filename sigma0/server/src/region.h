@@ -60,11 +60,6 @@ public:
 
     return Region(start, start + size - 1, owner, rights);
   }
-
-  static Region kr(unsigned long start, unsigned long end, unsigned owner = 0,
-                   L4_fpage_rights rights = L4_FPAGE_RWX)
-  { return bs(start, end - start, owner, rights); }
-
 };
 
 template< typename OS >
