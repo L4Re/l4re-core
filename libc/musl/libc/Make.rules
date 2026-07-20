@@ -35,6 +35,14 @@ LDFLAGS        += $(LDFLAGS_NONGOLD)
 
 LDFLAGS_libc.so += --entry=_dlstart
 
+# Taken from musl configure:
+# Public data symbols must be interposable to allow for copy
+# relocations, but otherwise we want to bind symbols at libc link
+# time to eliminate startup relocations and PLT overhead. Use
+# --dynamic-list rather than -Bsymbolic-functions for greater
+# control over what symbols are left unbound.
+LDFLAGS_libc.so += --dynamic-list=$(CONTRIB_DIR)/dynamic.list
+
 # process all sources for the libc
 $(eval $(call PROCESS_src_lists, $(DIRS), $(SUB_MODULES)))
 # process templates for instantiated C files
