@@ -79,19 +79,17 @@ void new_client(Answer *a)
 }
 
 static
-void map_free_page(unsigned size, l4_umword_t t, Answer *a)
+void map_free_page(unsigned order, l4_umword_t t, Answer *a)
 {
-  unsigned long addr;
-
-  if (size < L4_PAGESHIFT)
+  if (order < L4_PAGESHIFT)
     {
       a->error(L4_EINVAL);
       return;
     }
 
-  addr = Mem_man::ram()->alloc_first(1UL << size, t);
+  unsigned long addr = Mem_man::ram()->alloc_first(order, t);
   if (addr != ~0UL)
-    a->snd_fpage(addr, size, L4_FPAGE_RWX, true);
+    a->snd_fpage(addr, order, L4_FPAGE_RWX, true);
   else
     a->error(L4_ENOMEM);
 }

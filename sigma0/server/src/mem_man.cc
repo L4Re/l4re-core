@@ -11,6 +11,7 @@
 
 #include <l4/cxx/iostream>
 #include <l4/sys/assert.h>
+#include <l4/sys/cxx/consts>
 
 Mem_man Mem_man::_ram;
 
@@ -334,7 +335,7 @@ Mem_man::reserve(Region const &r)
 }
 
 unsigned long
-Mem_man::alloc_first(unsigned long size, unsigned owner)
+Mem_man::alloc_first(unsigned order, unsigned owner)
 {
   Tree::Item_type *n = 0;
 
@@ -344,14 +345,14 @@ Mem_man::alloc_first(unsigned long size, unsigned owner)
         continue;
 
       // wrap-around?
-      if ((i->start() + size - 1) < i->start())
+      if ((i->start() + (1UL << order) - 1) < i->start())
         continue;
 
-      l4_addr_t st = (i->start() + size - 1) & ~(size - 1);
+      l4_addr_t st = L4::round_order(i->start(), order);
       if (0)
         L4::cout << "test: " << (void*)st << " - " << i->end() << '\n';
 
-      if (st < i->end() && i->end() - st >= size - 1)
+      if (st < i->end() && i->end() - st >= (1UL << order) - 1)
         {
           n = &(*i);
           break;
@@ -361,7 +362,8 @@ Mem_man::alloc_first(unsigned long size, unsigned owner)
   if (!n)
     return ~0UL;
 
-  Region a = Region::start_size((n->start() + size - 1) & ~(size - 1), size, owner);
+  Region a = Region::start_size(L4::round_order(n->start(), order),
+                                1UL << order, owner);
 
   if (!alloc_from(n, a))
     return ~0UL;
