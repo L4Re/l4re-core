@@ -47,6 +47,20 @@ extern __typeof(sigaction) __libc_sigaction;
 #define manager_thread __pthread_manager_threadp
 pthread_descr __pthread_manager_threadp L4_HIDDEN;
 
+#ifdef __riscv
+/* The RISC-V global pointer (gp) of the main executable. On RISC-V, non-PIC
+   code (i.e. the main executable and the libgcc code linked into it) accesses
+   its data via gp-relative addressing and thus requires gp to hold the main
+   executable's __global_pointer$. On Linux this is guaranteed because the
+   value set up by the executable's _start is inherited by all threads via
+   clone(). On L4Re threads are started via ex_regs(), which does not propagate
+   gp, so the new thread trampoline (see tramp-riscv.S) has to install it
+   explicitly. It cannot use its own __global_pointer$ though, as that would
+   resolve to libc's gp. Instead we capture the main executable's gp here,
+   while still running on the main thread, and let the trampoline load it. */
+l4_umword_t __pthread_l4_gp L4_HIDDEN;
+#endif
+
 /* Pointer to the main thread (the father of the thread manager thread) */
 /* Originally, this is the initial thread, but this changes after fork() */
 
@@ -145,6 +159,12 @@ __pthread_initialize_minimal(void *arg)
     return;
 
   initialized = 1;
+
+#ifdef __riscv
+  /* Capture the main executable's global pointer while running on the main
+     thread. New threads' trampoline installs it (see tramp-riscv.S). */
+  __asm__ volatile ("mv %0, gp" : "=r"(__pthread_l4_gp));
+#endif
 
   /* initialize free list */
   l4_fpage_t utcb_area = l4re_env()->utcb_area;
