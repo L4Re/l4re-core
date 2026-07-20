@@ -104,7 +104,7 @@ ptlc_thread_descr_self(void)
 }
 
 pthread_descr
-ptlc_tls_tp_to_thread_descr(void *tls_tp) //DONE!
+ptlc_tls_tp_to_thread_descr(void *tls_tp)
 {
 #ifdef TLS_DTV_AT_TP
   return (pthread_descr)((char *)tls_tp - TLS_PRE_TCB_SIZE);
