@@ -38,9 +38,9 @@ template< typename T >
 class Page_alloc : public Page_alloc_base
 {
 public:
-  enum { can_free = 1 };
+  enum { can_free = 0 };
   T *alloc()
-  { return static_cast<T *>(_alloc.alloc(L4_PAGESIZE,L4_PAGESIZE)); }
+  { return static_cast<T *>(_alloc.alloc(L4_PAGESIZE, L4_PAGESIZE)); }
 
   void free(T *b)
   { _alloc.free(b, L4_PAGESIZE); }
