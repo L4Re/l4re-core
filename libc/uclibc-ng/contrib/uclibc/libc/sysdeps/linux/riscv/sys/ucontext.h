@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <bits/sigcontext.h>
 
+typedef unsigned long int __riscv_mc_gp_state[32];
+
 #define NGREG	32
 
 #define REG_PC 0
@@ -32,19 +34,51 @@
 #define REG_SP 2
 #define REG_TP 4
 #define REG_S0 8
+#define REG_S1 9
 #define REG_A0 10
+#define REG_S2 18
 #define REG_NARGS 8
 
 typedef unsigned long greg_t;
 
 /* Container for all general registers.  */
-typedef greg_t gregset_t[NGREG];
+typedef __riscv_mc_gp_state gregset_t;
 
 /* Container for floating-point state.  */
-typedef union __riscv_fp_state fpregset_t;
+typedef union __riscv_mc_fp_state fpregset_t;
+
+struct __riscv_mc_f_ext_state
+{
+  unsigned int __f[32];
+  unsigned int __fcsr;
+};
+
+struct __riscv_mc_d_ext_state
+{
+  unsigned long long int __f[32];
+  unsigned int __fcsr;
+};
+
+struct __riscv_mc_q_ext_state
+{
+  unsigned long long int __f[64] __attribute__ ((__aligned__ (16)));
+  unsigned int __fcsr;
+  unsigned int __reserved[3];
+};
+
+union __riscv_mc_fp_state
+{
+  struct __riscv_mc_f_ext_state __f;
+  struct __riscv_mc_d_ext_state __d;
+  struct __riscv_mc_q_ext_state __q;
+};
 
 /* Context to describe whole processor state.  */
-typedef struct sigcontext mcontext_t;
+typedef struct mcontext_t
+{
+  __riscv_mc_gp_state __gregs;
+  union  __riscv_mc_fp_state __fpregs;
+} mcontext_t;
 
 /* Userlevel context.  */
 typedef struct ucontext

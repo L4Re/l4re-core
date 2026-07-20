@@ -25,10 +25,10 @@ void fill_ucontext_frame(ucontext_t *ucf, l4_exc_regs_t *ue,
 {
   unsigned i;
 
-  ucf->uc_mcontext.gregs[0] = ue->pc;
+  ucf->uc_mcontext.__gregs[0] = ue->pc;
 
   for (i = 0; i < 31; ++i)
-    ucf->uc_mcontext.gregs[i+1] = ue->r[i];
+    ucf->uc_mcontext.__gregs[i+1] = ue->r[i];
 }
 
 static inline
@@ -36,10 +36,10 @@ void fill_utcb_exc(l4_exc_regs_t *ue, ucontext_t *ucf)
 {
   unsigned i;
 
-  ue->pc = ucf->uc_mcontext.gregs[0];
+  ue->pc = ucf->uc_mcontext.__gregs[0];
 
   for (i = 0; i < 31; ++i)
-    ue->r[i] = ucf->uc_mcontext.gregs[i+1];
+    ue->r[i] = ucf->uc_mcontext.__gregs[i+1];
 }
 
 static inline
