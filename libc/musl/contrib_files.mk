@@ -184,6 +184,7 @@ define SRC_math
   expm1
   expm1f
   expm1l
+  $(if $(filter x86,$(BUILD_ARCH)),exp_ld)
   fabs
   fabsf
   fabsl
@@ -476,6 +477,7 @@ endef
 define SRC_thread
   $(if $(LIBC_BUILD_MINIMAL),,__lock)
   $(if $(LIBC_BUILD_MINIMAL),,__tls_get_addr)
+  $(if $(LIBC_BUILD_MINIMAL),,$(if $(filter x86,$(BUILD_ARCH)),tls))
   default_attr
   lock_ptc
 endef
