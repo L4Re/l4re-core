@@ -655,7 +655,7 @@ define SRC_stdlib_fp
   gcvt
 endef
 
-# NOTE: Regarding memset and memcpy
+# NOTE: Regarding memset, memcpy and memmove
 # On arm64 these optimized implementations of memcpy and memset expect
 # that unaligned memory accesses are allowed, which unfortunately is
 # incompatible with bootstrap on arm64.
@@ -664,6 +664,9 @@ endef
 # the generic C fallback implementations.
 # Once we upgraded bootstrap so that it enables the caches, we can switch
 # back to the optimized implementations.
+# The x86_64 memmove.s relies on __memcpy_fwd, which is only provided by the
+# optimized memcpy.s, so it must switch to the C fallback in lockstep with
+# memcpy whenever BID_VARIANT_FLAG_NOFPU forces memcpy.c.
 define SRC_string
   bcmp
   bcopy
@@ -675,7 +678,7 @@ define SRC_string
   memcmp
   $(if $(and $(LIBC_BUILD_MINIMAL), $(filter arm64, $(BUILD_ARCH)))$(BID_VARIANT_FLAG_NOFPU), memcpy.c, memcpy)
   memmem
-  memmove
+  $(if $(and $(LIBC_BUILD_MINIMAL), $(filter arm64, $(BUILD_ARCH)))$(BID_VARIANT_FLAG_NOFPU), memmove.c, memmove)
   mempcpy
   memrchr
   $(if $(and $(LIBC_BUILD_MINIMAL), $(filter arm64, $(BUILD_ARCH)))$(BID_VARIANT_FLAG_NOFPU), memset.c, memset)
