@@ -37,6 +37,9 @@ enum l4_mem_type_t
   l4_mem_type_reserved     = 0x2, ///< Reserved memory for kernel etc.
   l4_mem_type_dedicated    = 0x3, ///< Dedicated memory (some device memory)
   l4_mem_type_shared       = 0x4, ///< Shared memory (not implemented)
+  l4_mem_type_kmem         = 0x5, ///< Kernel memory
+
+  // 0x7 is internally used by the kernel
 
   l4_mem_type_info         = 0xd, ///< Info from the boot loader
   l4_mem_type_bootloader   = 0xe, ///< Memory owned by the boot loader

@@ -52,6 +52,9 @@ namespace L4
         Reserved     = 0x2,  ///< Reserved region, do not use this memory
         Dedicated    = 0x3,  ///< Dedicated
         Shared       = 0x4,  ///< Shared
+        Kmem         = 0x5,  ///< Kernel memory
+
+        // 0x7 is internally used by the kernel
 
         Info         = 0xd,  ///< Info by boot loader
         Bootloader   = 0xe,  ///< Memory belongs to the boot loader
