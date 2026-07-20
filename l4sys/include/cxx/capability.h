@@ -50,7 +50,7 @@ public:
 
   /**
    * Test whether the capability is a valid capability index (i.e.,
-   * not L4_INVALID_CAP).
+   * #L4_INVALID_CAP_BIT is not set).
    *
    * \return True if capability is not invalid, false if invalid
    */
