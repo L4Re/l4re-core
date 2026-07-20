@@ -79,7 +79,7 @@ void new_client(Answer *a)
 }
 
 static
-void map_free_page(unsigned order, l4_umword_t t, Answer *a)
+void map_free_page(unsigned order, l4_umword_t client_id, Answer *a)
 {
   if (order < L4_PAGESHIFT)
     {
@@ -87,7 +87,7 @@ void map_free_page(unsigned order, l4_umword_t t, Answer *a)
       return;
     }
 
-  unsigned long addr = Mem_man::ram()->alloc_first(order, t);
+  unsigned long addr = Mem_man::ram()->alloc_first(order, client_id);
   if (addr != ~0UL)
     a->snd_fpage(addr, order, L4_FPAGE_RWX, true);
   else
@@ -96,7 +96,7 @@ void map_free_page(unsigned order, l4_umword_t t, Answer *a)
 
 
 static
-void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
+void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t client_id, Answer *an)
 {
   unsigned long send_addr = l4_fpage_memaddr(fp);
   unsigned send_order = l4_fpage_order(fp);
@@ -124,7 +124,8 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
     {
     case Ram:
       mem_flags = L4_FPAGE_RWX;
-      addr = Mem_man::ram()->alloc(Region::start_order(send_addr, send_order, t));
+      addr = Mem_man::ram()->alloc(Region::start_order(send_addr, send_order,
+                                                       client_id));
       break;
     case Io_mem:
       cached = false;
@@ -158,7 +159,7 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
 /* handler for page fault requests */
 static
 void
-handle_page_fault(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
+handle_page_fault(l4_umword_t client_id, l4_utcb_t *utcb, Answer *answer)
 {
   unsigned long pfa = l4_utcb_mr_u(utcb)->mr[0] & ~7UL;
   bool inst_fetch = l4_utcb_mr_u(utcb)->mr[0] & 4;
@@ -168,7 +169,7 @@ handle_page_fault(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
                                   : (write ? L4_FPAGE_RW : L4_FPAGE_RO);
 
   L4_fpage_rights rights;
-  Region r = Region::start_order(l4_trunc_page(pfa), L4_PAGESHIFT, t, dr);
+  Region r = Region::start_order(l4_trunc_page(pfa), L4_PAGESHIFT, client_id, dr);
   if (Mem_man::ram()->alloc_get_rights(r, &rights))
     {
       answer->snd_fpage(r.start(), L4_LOG2_PAGESIZE, rights, true);
@@ -198,7 +199,7 @@ void handle_service_request(l4_umword_t rights, l4_utcb_t *utcb, Answer *answer)
 }
 
 static
-void handle_sigma0_request(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
+void handle_sigma0_request(l4_umword_t client_id, l4_utcb_t *utcb, Answer *answer)
 {
   l4_msg_regs_t const *const m = l4_utcb_mr_u(utcb);
   if (!SIGMA0_IS_MAGIC_REQ(m->mr[0]))
@@ -230,19 +231,19 @@ void handle_sigma0_request(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
         }
       break;
     case SIGMA0_REQ_ID_FPAGE_RAM:
-      map_mem(l4_fpage_t{m->mr[1]}, Ram, t, answer);
+      map_mem(l4_fpage_t{m->mr[1]}, Ram, client_id, answer);
       break;
     case SIGMA0_REQ_ID_FPAGE_IOMEM:
-      map_mem(l4_fpage_t{m->mr[1]}, Io_mem, t, answer);
+      map_mem(l4_fpage_t{m->mr[1]}, Io_mem, client_id, answer);
       break;
     case SIGMA0_REQ_ID_FPAGE_IOMEM_CACHED:
-      map_mem(l4_fpage_t{m->mr[1]}, Io_mem_cached, t, answer);
+      map_mem(l4_fpage_t{m->mr[1]}, Io_mem_cached, client_id, answer);
       break;
     case SIGMA0_REQ_ID_KIP:
       map_kip(answer);
       break;
     case SIGMA0_REQ_ID_FPAGE_ANY:
-      map_free_page(l4_fpage_order(l4_fpage_t{m->mr[1]}), t, answer);
+      map_free_page(l4_fpage_order(l4_fpage_t{m->mr[1]}), client_id, answer);
       break;
     case SIGMA0_REQ_ID_COV:
       if (cov_print)
@@ -268,7 +269,6 @@ class Sigma0 :
 void
 pager(void)
 {
-  l4_umword_t t;
   l4_msgtag_t tag;
 
   l4_utcb_t *utcb = l4_utcb();
@@ -277,7 +277,8 @@ pager(void)
   /* now start serving the subtasks */
   for (;;)
     {
-      tag = l4_ipc_wait(utcb, &t, L4_IPC_NEVER);
+      l4_umword_t label;
+      tag = l4_ipc_wait(utcb, &label, L4_IPC_NEVER);
       if (0)
         L4::cout << PROG_NAME << ": rcv: " << tag << "\n";
       while (!l4_msgtag_has_error(tag))
@@ -285,8 +286,9 @@ pager(void)
           l4_umword_t pfa;
           if (debug_warnings)
             pfa = l4_utcb_mr_u(utcb)->mr[0];
-          l4_umword_t client_rights = t & (L4_CAP_FPAGE_W | L4_CAP_FPAGE_S);
-          t >>= 4;
+          l4_umword_t client_rights = label & (L4_CAP_FPAGE_W | L4_CAP_FPAGE_S);
+          l4_umword_t client_id = label >> 4;
+
           /* we received a paging request here */
           /* handle the sigma0 protocol */
 
@@ -295,31 +297,31 @@ pager(void)
               l4_umword_t d1 = l4_utcb_mr_u(utcb)->mr[0];
               l4_umword_t d2 = l4_utcb_mr_u(utcb)->mr[1];
               L4::cout << PROG_NAME": received " << tag << " d1=" << L4::hex
-                       << d1 << " d2=" << d2 << L4::dec << " from thread="
-                       << t << '\n';
+                       << d1 << " d2=" << d2 << L4::dec << " from client="
+                       << client_id << '\n';
             }
 
           switch (tag.label())
             {
             case L4_PROTO_SIGMA0:
-              handle_sigma0_request(t, utcb, &answer);
+              handle_sigma0_request(client_id, utcb, &answer);
               break;
             case L4::Meta::Protocol:
               {
                 L4::Ipc::Detail::Meta_svr<Sigma0> dummy;
                 answer.tag
                   = L4::Ipc::Msg::dispatch_call<L4::Meta::Rpcs>(&dummy, utcb,
-                                                                tag, t);
+                                                                tag, client_id);
               }
               break;
             case L4::Factory::Protocol:
               handle_service_request(client_rights, utcb, &answer);
               break;
             case L4_PROTO_PAGE_FAULT:
-              handle_page_fault(t, utcb, &answer);
+              handle_page_fault(client_id, utcb, &answer);
               break;
             case L4_PROTO_IO_PAGE_FAULT:
-              handle_io_page_fault(t, utcb, &answer);
+              handle_io_page_fault(client_id, utcb, &answer);
               break;
             default:
               answer.error(L4_EBADPROTO);
@@ -334,7 +336,7 @@ pager(void)
                            << l4_msgtag_label(tag)
                            << " d1=" << L4::hex << pfa
                            << " d2=" << l4_utcb_mr_u(utcb)->mr[1]
-                           << " from thread=" << L4::dec << t << '\n';
+                           << " from client=" << L4::dec << client_id << '\n';
                   if (tag.is_page_fault())
                     Mem_man::ram()->dump();
                 }
@@ -347,10 +349,10 @@ pager(void)
                      << L4::hex << l4_utcb_mr_u(utcb)->mr[0]
                      << " d2=" << l4_utcb_mr_u(utcb)->mr[1]
                      << " msg=" << answer.tag << L4::dec
-                     << " to thread=" << t << '\n';
+                     << " to thread=" << client_id << '\n';
 
           /* send reply and wait for next message */
-          tag = l4_ipc_reply_and_wait(utcb, answer.tag, &t,
+          tag = l4_ipc_reply_and_wait(utcb, answer.tag, &label,
                                       L4_IPC_SEND_TIMEOUT_0);
         }
     }
