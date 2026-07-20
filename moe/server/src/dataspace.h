@@ -56,7 +56,7 @@ public:
       offs(offs) {}
 
     unsigned long bs() const noexcept { return fpage.raw & L4_FPAGE_ADDR_MASK; }
-    unsigned long sz() const noexcept { return 1 << l4_fpage_size(fpage); }
+    unsigned long sz() const noexcept { return 1 << l4_fpage_order(fpage); }
     unsigned long of() const noexcept { return offs; }
     l4_fpage_t fp() const noexcept { return fpage; }
 

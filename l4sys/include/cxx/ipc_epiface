@@ -119,7 +119,7 @@ public:
     { return reinterpret_cast<void *>(l4_fpage_memaddr(_fp)); }
 
     unsigned order() const noexcept
-    { return l4_fpage_size(_fp); }
+    { return l4_fpage_order(_fp); }
 
     l4_umword_t size() const noexcept
     { return l4_umword_t{1} << order(); }

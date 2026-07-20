@@ -602,8 +602,8 @@ Region_map_svr::op_io_page_fault(L4::Io_pager::Rights,
                                  l4_fpage_t io_pfa, l4_umword_t pc,
                                  L4::Ipc::Opt<L4::Ipc::Snd_fpage> &)
 {
-  Err().printf("IO-port-fault: port=0x%lx size=%d pc=0x%lx\n",
-               l4_fpage_ioport(io_pfa), 1 << l4_fpage_size(io_pfa), pc);
+  Err().printf("IO-port-fault: port=0x%lx order=%d pc=0x%lx\n",
+               l4_fpage_ioport(io_pfa), 1 << l4_fpage_order(io_pfa), pc);
   return -L4_ENOMEM;
 }
 

@@ -515,9 +515,24 @@ l4_fpage_type(l4_fpage_t f) L4_NOTHROW;
  * \return Size part of the given flexpage.
  *
  * \see l4_fpage_memaddr(), l4_fpage_obj(), l4_fpage_ioport()
+ *
+ * \deprecated Use l4_fpage_order() instead.
  */
 L4_INLINE L4_CONSTEXPR unsigned
 l4_fpage_size(l4_fpage_t f) L4_NOTHROW;
+
+/**
+ * Return order (log2(size)) from a flexpage.
+ * \ingroup l4_fpage_api
+ *
+ * \param f  Flexpage
+ *
+ * \return Order part of the given flexpage.
+ *
+ * \see l4_fpage_memaddr(), l4_fpage_obj(), l4_fpage_ioport()
+ */
+L4_INLINE L4_CONSTEXPR unsigned
+l4_fpage_order(l4_fpage_t f) L4_NOTHROW;
 
 /**
  * Return the page part from a flexpage.
@@ -661,6 +676,12 @@ l4_fpage_size(l4_fpage_t f) L4_NOTHROW
   return (f.raw & L4_FPAGE_SIZE_MASK) >> L4_FPAGE_SIZE_SHIFT;
 }
 
+L4_INLINE L4_CONSTEXPR unsigned
+l4_fpage_order(l4_fpage_t f) L4_NOTHROW
+{
+  return (f.raw & L4_FPAGE_SIZE_MASK) >> L4_FPAGE_SIZE_SHIFT;
+}
+
 L4_INLINE L4_CONSTEXPR unsigned long
 l4_fpage_page(l4_fpage_t f) L4_NOTHROW
 {
@@ -772,7 +793,7 @@ l4_fpage_contains(l4_fpage_t fpage, l4_addr_t addr, unsigned log2size) L4_NOTHRO
 {
   l4_addr_t fa = l4_fpage_memaddr(fpage);
   return (fa <= addr)
-         && (fa + (1UL << l4_fpage_size(fpage)) >= addr + (1UL << log2size));
+         && (fa + (1UL << l4_fpage_order(fpage)) >= addr + (1UL << log2size));
 }
 
 L4_INLINE L4_CONSTEXPR unsigned char
@@ -802,5 +823,5 @@ l4_fpage_max_order(unsigned char order, l4_addr_t addr,
 L4_INLINE L4_CONSTEXPR int
 l4_is_fpage_valid(l4_fpage_t fp) L4_NOTHROW
 {
-  return l4_fpage_type(fp) != L4_FPAGE_SPECIAL || l4_fpage_size(fp) != 0;
+  return l4_fpage_type(fp) != L4_FPAGE_SPECIAL || l4_fpage_order(fp) != 0;
 }

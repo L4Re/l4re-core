@@ -104,7 +104,7 @@ void map_mem(l4_fpage_t fp, Memory_type fn, l4_umword_t t, Answer *an)
   Region const *p;
   Region r;
   unsigned long send_addr = l4_fpage_memaddr(fp);
-  unsigned send_order = l4_fpage_size(fp);
+  unsigned send_order = l4_fpage_order(fp);
 
   // Check if send_addr is correctly aligned to send_order since the kernel
   // will otherwise truncate the send address. Fail in case it is not aligned.
@@ -242,7 +242,7 @@ void handle_sigma0_request(l4_umword_t t, l4_utcb_t *utcb, Answer *answer)
       map_kip(answer);
       break;
     case SIGMA0_REQ_ID_FPAGE_ANY:
-      map_free_page(l4_fpage_size(l4_fpage_t{m->mr[1]}), t, answer);
+      map_free_page(l4_fpage_order(l4_fpage_t{m->mr[1]}), t, answer);
       break;
     case SIGMA0_REQ_ID_COV:
       if (cov_print)

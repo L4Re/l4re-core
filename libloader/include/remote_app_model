@@ -165,7 +165,7 @@ public:
                                this->_info.utcbs_log2size, 0);
     chksys(factory->create_task(_ntask, &utcb));
     this->_info.utcbs_start = l4_fpage_memaddr(utcb);
-    this->_info.utcbs_log2size = l4_fpage_size(utcb);
+    this->_info.utcbs_log2size = l4_fpage_order(utcb);
 
     chksys(factory->create(_nthread));
   }

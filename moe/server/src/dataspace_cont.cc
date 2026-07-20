@@ -97,8 +97,8 @@ void Moe::Dataspace_cont::unmap() const noexcept
       Address addr = address(offs, L4Re::Dataspace::F::RWX);
       fpages[pages_idx++] = addr.fp();
 
-      size -= (1UL << l4_fpage_size(addr.fp()));
-      offs  += (1UL << l4_fpage_size(addr.fp()));
+      size -= (1UL << l4_fpage_order(addr.fp()));
+      offs  += (1UL << l4_fpage_order(addr.fp()));
 
       // flush the fpages array, when it's full.
       if (pages_idx == Fpages_array_length)
