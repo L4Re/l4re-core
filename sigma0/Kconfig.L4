@@ -11,4 +11,21 @@ config SIGMA0_PRIORITY
 
 	  Valid values range from 1 to 255.
 
+config SIGMA0_HEAP_NUM_PAGES
+	int "Number of page for heap"
+	range 1 32 # arbitrary sane limit
+	default 1
+	help
+	  This sets the number of pages used by the Sigma0 heap. The heap is
+	  only used to track region lists for normal RAM, for I/O port (x86),
+	  and for a static list of available MMIO regions.
+
+	  Usually, the number of required regions is limited:
+	  - The root task allocates the entire RAM.
+	  - The number of MMIO regions is constant (no user tracking).
+
+	  So the number of regions depends on the static RAM fragmentation, the
+	  static fragmentation of the MMIO space and, on x86, the dynamically
+	  variable number of I/O port regions.
+
 endmenu
