@@ -522,24 +522,6 @@ static void init_env()
 static __attribute__((used, section(".preinit_array")))
    const void *pre_init_env = reinterpret_cast<void *>(init_env);
 
-static void init_emergency_memory()
-{
-  // populate the page allocator with a few pages of available memory to allow
-  // for dynamic allocation of memory arena during the static initialization of
-  // stdc++'s emergency_pool in GCC versions 5 and newer
-  unsigned constexpr order = L4_PAGESHIFT + 2;
-  l4_addr_t addr;
-  [[maybe_unused]] int err =
-    l4sigma0_map_anypage(Sigma0_cap, 0, L4_WHOLE_ADDRESS_SPACE, &addr, order);
-  l4_assert(!err);
-  Single_page_alloc_base::_add_mem(reinterpret_cast<void *>(addr),
-                                   1UL << order);
-}
-
-static __attribute__((used, section(".preinit_array")))
-   const void *pre_init_emergency_memory
-     = reinterpret_cast<void *>(init_emergency_memory);
-
 int main(int /* argc */, char** /* argv */)
 {
   Dbg::set_level(Dbg::Info | Dbg::Warn);
