@@ -14,7 +14,7 @@ config SIGMA0_PRIORITY
 config SIGMA0_HEAP_NUM_PAGES
 	int "Number of page for heap"
 	range 1 32 # arbitrary sane limit
-	default 1
+	default 2
 	help
 	  This sets the number of pages used by the Sigma0 heap. The heap is
 	  only used to track region lists for normal RAM, for I/O port (x86),
