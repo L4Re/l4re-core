@@ -82,7 +82,7 @@ void *Single_page_alloc_base::_alloc_max(unsigned long min,
   void *ret = page_alloc()->alloc_max(min, max, align, granularity, cfg.physmin,
                                       cfg.physmax);
   if (page_alloc_debug)
-    L4::cout << "pa(" << __builtin_return_address(0) << "): alloc(" << *max << ") @" << ret << '\n';
+    L4::cout << "pa(" << __builtin_return_address(0) << "): alloc_max(" << *max << ") @" << ret << '\n';
   return ret;
 }
 
