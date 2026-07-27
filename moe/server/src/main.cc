@@ -585,10 +585,11 @@ int main(int /* argc */, char** /* argv */)
       map_kip();
       init_utcb();
       Moe::Boot_fs::init_stage1();
-      find_memory();
-      init_virt_limits();
 
       cxx::String init_args = parse_cmdline();
+
+      find_memory();
+      init_virt_limits();
 
 #if 0
       extern unsigned page_alloc_debug;
