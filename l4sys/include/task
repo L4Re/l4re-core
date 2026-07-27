@@ -38,7 +38,7 @@ public:
   /**
    * Map resources available in the source task to a destination task.
    *
-   * \param src_task   Capability selector of the source task.
+   * \param src_task   Capability index of the source task.
    * \param snd_fpage  Send flexpage that describes an area in the address
    *                   space or object space of the source task.
    * \param snd_base   Send base that describes an offset in the receive window
@@ -184,7 +184,7 @@ public:
   /**
    * Release object capability.
    *
-   * \param cap   Capability selector of the object to release.
+   * \param cap   Capability index of the object to release.
    * \utcb_def{utcb}
    *
    * \return Syscall return tag.

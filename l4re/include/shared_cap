@@ -19,12 +19,12 @@ namespace L4Re {
 
 /**
  * Shared capability that implements automatic free and unmap of the capability
- * selector.
+ * slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
  * This shared capability implements a counted reference to a
- * capability selector. The capability shall be unmapped and freed
+ * capability slot. The capability shall be unmapped and freed
  * when the reference count in the allocator goes to zero.
  *
  * \note This type is intended for users who implement a custom capability
@@ -168,12 +168,12 @@ Shared_cap<T> shared_cap_dynamic_cast(Shared_cap<U> &&from) noexcept
 
 /**
  * Shared capability that implements automatic free and unmap+delete of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
  * This shared capability implements a counted reference to a capability
- * selector. The capability shall be unmapped and freed when the reference
+ * slot. The capability shall be unmapped and freed when the reference
  * count in the allocator goes to zero.
  * The main difference to Shared_cap is that the unmap is done with the
  * deletion flag enabled and this leads to the deletion of the object

@@ -43,7 +43,7 @@
 typedef struct l4re_env_cap_entry_t
 {
   /**
-   * The capability selector for the object.
+   * The capability index for the object or #L4_INVALID_CAP.
    */
   l4_cap_idx_t cap;
 
@@ -68,7 +68,7 @@ typedef struct l4re_env_cap_entry_t
    * Create an entry with the name \a n, capability \a c, and flags \a f.
    *
    * \param n is the name of the initial object.
-   * \param c is the capability selector that refers the initial object.
+   * \param c is the capability index that refers the initial object.
    * \param f are the additional flags for the object.
    */
   l4re_env_cap_entry_t(char const *n, l4_cap_idx_t c, l4_umword_t f = 0) L4_NOTHROW
@@ -122,7 +122,7 @@ typedef struct l4re_env_t
   l4_cap_idx_t scheduler;      /**< Object capability for the scheduler set to use */
   l4_cap_idx_t itas;           /**< ITAS services object-capability */
   l4_cap_idx_t dbg_events;     /**< Object-capability of the debug events service */
-  l4_cap_idx_t first_free_cap; /**< First capability index available to the application */
+  l4_cap_idx_t first_free_cap; /**< First object capability index available to the application */
   l4_umword_t  first_free_reply_cap; /**< First reply capability index available to the application */
   l4_fpage_t utcb_area;        /**< UTCB area of the task */
   l4_addr_t first_free_utcb;   /**< First UTCB within the UTCB area available to the application */
@@ -161,22 +161,22 @@ L4_INLINE l4_kernel_info_t const *l4re_kip(void) L4_NOTHROW;
 
 
 /**
- * Get the capability selector for the object named \a name.
+ * Get the capability index for the object named \a name.
  * \ingroup api_l4re_env
  * \param name is the name of the object to lookup in the initial objects.
- * \return A valid capability selector if the object exists or an invalid
- *         capability selector if not (l4_is_invalid_cap()).
+ * \return A capability index if the object exists or an invalid
+ *         capability selector if not (see l4_is_invalid_cap()).
  */
 L4_INLINE l4_cap_idx_t
 l4re_env_get_cap(char const *name) L4_NOTHROW;
 
 /**
- * Get the capability selector for the object named \a name.
+ * Get the capability index for the object named \a name.
  * \ingroup api_l4re_env
  * \param name is the name of the object to lookup in the initial objects.
  * \param e is the environment structure to use for the operation.
- * \return A valid capability selector if the object exists or an invalid
- *         capability selector if not (l4_is_invalid_cap()).
+ * \return A capability index if the object exists or an invalid
+ *         capability selector if not (see l4_is_invalid_cap()).
  */
 L4_INLINE l4_cap_idx_t
 l4re_env_get_cap_e(char const *name, l4re_env_t const *e) L4_NOTHROW;

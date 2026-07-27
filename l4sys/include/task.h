@@ -33,8 +33,8 @@
  * Map resources available in the source task to a destination task.
  * \ingroup l4_task_api
  *
- * \param dst_task   Capability selector of the destination task.
- * \param src_task   Capability selector of the source task.
+ * \param dst_task   Capability index of the destination task.
+ * \param src_task   Capability index of the source task.
  * \param snd_fpage  Send flexpage that describes an area in the address
  *                   space or object space of the source task.
  * \param snd_base   Send base that describes an offset in the receive window
@@ -91,7 +91,7 @@ l4_task_map_u(l4_cap_idx_t dst_task, l4_cap_idx_t src_task,
  * Revoke rights from the task.
  * \ingroup l4_task_api
  *
- * \param task          Capability selector of destination task
+ * \param task          Capability index of destination task
  * \param fpage         Flexpage that describes an area in one capability space
  *                      of the destination task and the rights to revoke.
  * \param map_mask      Unmap mask, see #l4_unmap_flags_t
@@ -146,7 +146,7 @@ l4_task_unmap_u(l4_cap_idx_t task, l4_fpage_t fpage,
  * Revoke rights from a task.
  * \ingroup l4_task_api
  *
- * \param task          Capability selector of destination task
+ * \param task          Capability index of destination task
  * \param fpages        An array of flexpages. Each item describes an area in
  *                      one capability space of the destination task.
  * \param num_fpages    The size of the fpages array in elements (number of
@@ -177,7 +177,7 @@ l4_task_unmap_batch_u(l4_cap_idx_t task, l4_fpage_t const *fpages,
  * Release capability and delete object.
  * \ingroup l4_task_api
  *
- * \param task  Capability selector of destination task.
+ * \param task  Capability index of destination task.
  * \param obj   Capability index of the object to delete.
  *
  * \return Syscall return tag
@@ -208,8 +208,8 @@ l4_task_delete_obj_u(l4_cap_idx_t task, l4_cap_idx_t obj,
  * Release object capability.
  * \ingroup l4_task_api
  *
- * \param task          Capability selector of destination task
- * \param cap           Capability selector of object to release
+ * \param task          Capability index of destination task
+ * \param cap           Capability index of object to release
  *
  * \return Syscall return tag
  *
@@ -264,7 +264,7 @@ l4_task_cap_valid_u(l4_cap_idx_t task, l4_cap_idx_t cap, l4_utcb_t *utcb) L4_NOT
  * permissions (only considering selected permissions).
  * \ingroup l4_task_api
  *
- * \param task   Capability selector for the destination task to do the lookup
+ * \param task   Capability index for the destination task to do the lookup
  *               in.
  * \param cap_a  Capability selector for the first capability to compare.
  * \param cap_b  Capability selector for the second capability to compare.
@@ -301,7 +301,7 @@ l4_task_add_ku_mem_u(l4_cap_idx_t task, l4_fpage_t *ku_mem,
  * Add kernel-user memory.
  * \ingroup l4_task_api
  *
- * \param task            Capability selector of the task to add the memory to.
+ * \param task            Capability index of the task to add the memory to.
  * \param[in,out] ku_mem  Flexpage describing the virtual area the memory goes
  *                        to. On systems without MMU, the flexpage is adjusted
  *                        to reflect the actually allocated physical address.

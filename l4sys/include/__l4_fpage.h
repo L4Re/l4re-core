@@ -395,7 +395,7 @@ l4_iofpage(unsigned long port, unsigned int order) L4_NOTHROW;
  * Create a kernel-object flexpage.
  * \ingroup l4_fpage_api
  *
- * \param   obj       Base capability selector.
+ * \param   obj       Base capability index.
  * \param   order     Log2 size (number of capabilities).
  * \param   rights    Access rights, see #L4_cap_fpage_rights
  *

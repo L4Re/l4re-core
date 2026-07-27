@@ -18,7 +18,7 @@ namespace L4Re { namespace Util {
 
 /**
  * Unique capability that implements automatic free and unmap of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
@@ -36,7 +36,7 @@ namespace L4Re { namespace Util {
  *       ...
  *
  *       // At the end of the scope ds_cap is unmapped and the capability
- *       // selector is freed.
+ *       // slot is freed.
  *     }
  */
 template< typename T >
@@ -59,7 +59,7 @@ make_unique_cap()
 
 /**
  * Unique capability that implements automatic free and unmap+delete of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
@@ -79,7 +79,7 @@ make_unique_cap()
  *       ...
  *
  *       // At the end of the scope ds_cap is unmapped and the capability
- *       // selector is freed. Because the deletion flag is set the data space
+ *       // slot is freed. Because the deletion flag is set the data space
  *       // shall also be deleted (even if there are other references to this
  *       // data space).
  *     }

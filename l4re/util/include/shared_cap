@@ -19,12 +19,12 @@ namespace L4Re { namespace Util {
 
 /**
  * Shared capability that implements automatic free and unmap of the capability
- * selector.
+ * slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
  * This shared capability implements a counted reference to a capability
- * selector. The capability shall be unmapped and freed when the reference
+ * slot. The capability shall be unmapped and freed when the reference
  * count in the allocator goes to zero.
  *
  * Usage:
@@ -34,7 +34,7 @@ namespace L4Re { namespace Util {
  *     {
  *       L4Re::Util::Shared_cap<L4Re::Dataspace>
  *         ds_cap = make_shared_cap<L4Re::Dataspace>();
- *       // reference count for the allocated cap selector is now 1
+ *       // reference count for the allocated capability slot is now 1
  *
  *       // use the dataspace cap
  *       L4Re::chksys(mem_alloc->alloc(4096, ds_cap.get()));
@@ -179,12 +179,12 @@ Shared_cap<T> shared_cap_dynamic_cast(Shared_cap<U> &&from) noexcept
 
 /**
  * Shared capability that implements automatic free and unmap+delete of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
  * This shared capability implements a counted reference to a capability
- * selector. The capability shall be unmapped and freed when the reference
+ * slot. The capability shall be unmapped and freed when the reference
  * count in the allocator goes to zero.
  * The main difference to Shared_cap is that the unmap is done with the
  * deletion flag enabled and this leads to the deletion of the object
@@ -197,7 +197,7 @@ Shared_cap<T> shared_cap_dynamic_cast(Shared_cap<U> &&from) noexcept
  *     {
  *       L4Re::Util::Shared_del_cap<L4Re::Dataspace>
  *         ds_cap = make_shared_del_cap<L4Re::Dataspace>();
- *       // reference count for the allocated cap selector is now 1
+ *       // reference count for the allocated capability slot is now 1
  *
  *       // use the dataspace cap
  *       L4Re::chksys(mem_alloc->alloc(4096, ds_cap.get()));

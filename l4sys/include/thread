@@ -152,39 +152,42 @@ public:
      { l4_thread_control_start_u(utcb); }
 
      /**
-      * Set the pager capability selector.
+      * Set the pager capability index.
       *
-      * \param pager  The capability selector that shall be used for page-fault
-      *               messages. This capability selector must be valid within
-      *               the task the thread is bound to.
+      * \param pager  The capability index that shall be used for page-fault
+      *               messages. At this capability index, a capability must be
+      *               present within the task the thread is bound to.
       */
      void pager(Cap<void> const &pager) noexcept
      { l4_thread_control_pager_u(pager.cap(), _u); }
 
      /**
-      * Get the capability selector used for page-fault messages.
+      * Get the capability index used for page-fault messages.
       *
-      * \return The capability selector used to send page-fault messages. The
-      *         selector is valid in the task the thread is bound to.
+      * \return The capability index used to send page-fault messages. At this
+      *         capability index, there is a capability present in the task the
+      *         thread is bound to.
       */
      Cap<void> pager() noexcept
      { return Cap<void>(l4_utcb_mr_u(_u)->mr[1]); }
 
      /**
-      * Set the exception-handler capability selector.
+      * Set the exception-handler capability index.
       *
-      * \param exc_handler  The capability selector that shall be used for
-      *                     exception messages. This capability selector must
-      *                     be valid within the task the thread is bound to.
+      * \param exc_handler  The capability index that shall be used for
+      *                     exception messages. At this capability index, a
+      *                     capability must be present within the task the
+      *                     thread is bound to.
       */
      void exc_handler(Cap<void> const &exc_handler) noexcept
      { l4_thread_control_exc_handler_u(exc_handler.cap(), _u); }
 
      /**
-      * Get the capability selector used for exception messages.
+      * Get the capability index used for exception messages.
       *
-      * \return The capability selector used to send exception messages. The
-      *         selector is valid in the task the thread is bound to.
+      * \return The capability index used to send exception messages. At this
+      *         capability index, there is a capability present in the task the
+      *         thread is bound to.
       */
      Cap<void> exc_handler() noexcept
      { return Cap<void>(l4_utcb_mr_u(_u)->mr[2]); }
@@ -402,7 +405,7 @@ public:
   /**
    * Register an IRQ that will trigger upon deletion events.
    *
-   * \param irq  Capability selector for the IRQ object to be triggered.
+   * \param irq  Capability index for the IRQ object to be triggered.
    * \utcb_def{u}
    *
    * \return System call return tag containing the return code.
@@ -531,7 +534,7 @@ public:
    * Register an IRQ that will trigger when a forwarded virtual interrupt is
    * pending.
    *
-   * \param irq  Capability selector for the IRQ object to be triggered.
+   * \param irq  Capability index for the IRQ object to be triggered.
    * \utcb_def{u}
    *
    * \return System call return tag containing the return code.

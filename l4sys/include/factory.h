@@ -57,7 +57,7 @@
 /**
  * \ingroup l4_factory_api
  * \copybrief L4::Factory::create_task
- * \param         factory     Capability selector for factory to use for
+ * \param         factory     Capability index for factory to use for
  *                            creation.
  * \param[out]    target_cap  The kernel stores the new task's capability into
  *                            this slot.
@@ -99,7 +99,7 @@ l4_factory_create_task_u(l4_cap_idx_t factory, l4_cap_idx_t target_cap,
  * \ingroup l4_factory_api
  * Create a new thread.
  *
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new thread's capability into
  *                         this slot.
  *
@@ -128,7 +128,7 @@ l4_factory_create_thread_u(l4_cap_idx_t factory,
 /**
  * \ingroup l4_factory_api
  * \copybrief L4::Factory::create_factory
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new factory's capability into
  *                         this slot.
  * \param      limit       Limit for the new factory in bytes.
@@ -165,10 +165,10 @@ l4_factory_create_factory_u(l4_cap_idx_t factory, l4_cap_idx_t target_cap,
 /**
  * \ingroup l4_factory_api
  * \copybrief L4::Factory::create_gate
- * \param      factory      Capability selector for factory to use for creation.
+ * \param      factory      Capability index for factory to use for creation.
  * \param[out] target_cap   The kernel stores the new IPC gate's capability into
  *                          this slot.
- * \param      snd_dst_cap  Optional capability selector of a thread or thread
+ * \param      snd_dst_cap  Optional capability index of a thread or thread
  *                          group to bind the gate to. Use #L4_INVALID_CAP to
  *                          create an unbound IPC gate.
  * \param      label        Optional label of the gate (precisely used if
@@ -238,7 +238,7 @@ l4_factory_create_irq_u(l4_cap_idx_t factory,
  * \ingroup l4_factory_api
  * Create a new virtual machine.
  *
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new VM's capability into this
  *                         slot.
  *
@@ -261,7 +261,7 @@ l4_factory_create_vm(l4_cap_idx_t factory,
  * Create a new vCPU context. A vCPU context typically represents a hardware
  * structure that captures the state of a vCPU on a CPU (e.g. VMX VMCS).
  *
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new vCPU context's capability
  *                         into this slot.
  *
@@ -288,7 +288,7 @@ l4_factory_create_vcpu_context(l4_cap_idx_t factory,
  * receive the message. A thread group is a send destination for an IPC
  * endpoint.
  *
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new thread group's capability
  *                         into this slot.
  * \param      policy      Policy parameter for the thread group. See
@@ -317,7 +317,7 @@ l4_factory_create_thread_group(l4_cap_idx_t factory,
  *
  * The priority inheritance mutex is bound to the specified task.
  *
- * \param      factory     Capability selector for factory to use for creation.
+ * \param      factory     Capability index for factory to use for creation.
  * \param[out] target_cap  The kernel stores the new mutex's capability into
  *                         this slot.
  * \param      ku_status   Address of mutex status field in kernel-user memory

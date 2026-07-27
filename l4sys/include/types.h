@@ -343,6 +343,8 @@ L4_INLINE l4_msgtag_t l4_msgtag(long label, unsigned words, unsigned items,
  * A capability selector is either a (shifted) capability index, a (shifted)
  * reply capability index or the invalid capability selector #L4_INVALID_CAP.
  *
+ * An alternative, synonymous term for capability index is capability slot.
+ *
  * When an interface expects an argument of type #l4_cap_idx_t and the
  * documentation does not state any specifics, it is assumed that the argument
  * is an object capability index, i.e., `idx` `<<` #L4_CAP_SHIFT for arbitrary
@@ -410,12 +412,12 @@ L4_INLINE unsigned l4_is_valid_cap(l4_cap_idx_t c) L4_NOTHROW;
 L4_INLINE unsigned l4_capability_equal(l4_cap_idx_t c1, l4_cap_idx_t c2) L4_NOTHROW;
 
 /**
- * Get the next capability selector after `c`.
+ * Get the next capability index after `c`.
  *
- * \param c  The capability selector for which the next selector shall be
+ * \param c  The capability index for which the next one shall be
  *           computed.
  *
- * \returns The next capability selector after `c`.
+ * \returns The next capability index after `c`.
  */
 L4_INLINE l4_cap_idx_t l4_capability_next(l4_cap_idx_t c) L4_NOTHROW;
 

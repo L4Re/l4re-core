@@ -19,7 +19,7 @@ l4_task_vgicc_map_u(l4_cap_idx_t task, l4_fpage_t vgicc_fpage,
  * detected a GIC version 2.
  * \ingroup l4_task_api
  *
- * \param task          Capability selector of destination task
+ * \param task          Capability index of destination task
  * \param vgicc_fpage   Flexpage that describes an area in the address space
  *                      of the destination task to map the vGICC page to
  *

@@ -18,7 +18,7 @@ namespace L4Re {
 
 /**
  * Unique capability that implements automatic free and unmap of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *
@@ -51,7 +51,7 @@ make_unique_cap(L4Re::Cap_alloc *ca)
 
 /**
  * Unique capability that implements automatic free and unmap+delete of the
- * capability selector.
+ * capability slot.
  *
  * \tparam T  Type of the object the capability refers to.
  *

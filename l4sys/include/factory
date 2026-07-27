@@ -114,7 +114,7 @@ public:
      * \param      f       The capability for the factory object (L4::Factory).
      * \param      obj     The protocol ID to describe the type of the object
      *                     that shall be created.
-     * \param[out] target  The capability selector for the new object. The
+     * \param[out] target  The capability slot for the new object. The
      *                     caller must allocate the capability slot. The kernel
      *                     stores the new object's capability into this slot.
      * \utcb{utcb}
@@ -262,7 +262,7 @@ public:
   /**
    * Generic create call to the factory.
    *
-   * \param[out] target  Capability selector for the new object. The caller
+   * \param[out] target  Capability slot for the new object. The caller
    *                     must allocate the capability slot. The kernel stores
    *                     the new object's capability into this slot.
    * \param      obj     The protocol ID that specifies which kind of object
@@ -412,7 +412,7 @@ public:
    *
    * \param[out] target_cap   The kernel stores the new IPC gate's capability
    *                          into this slot.
-   * \param      snd_dst_cap  Optional capability selector of a thread or thread
+   * \param      snd_dst_cap  Optional capability index of a thread or thread
    *                          group to bind the gate to. Use #L4_INVALID_CAP to
    *                          create an unbound IPC gate.
    * \param      label        Optional label of the gate (precisely used if

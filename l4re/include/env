@@ -148,10 +148,10 @@ namespace L4Re
     L4::Cap<L4::Factory> factory() const noexcept
     { return L4::Cap<L4::Factory>(_env.factory); }
     /**
-     * First available capability selector.
-     * \return First capability selector.
+     * First available object capability index.
+     * \return First object capability index.
      *
-     * First capability selector available for use for in the application.
+     * First object capability index available for use for in the application.
      */
     l4_cap_idx_t first_free_cap() const noexcept
     { return _env.first_free_cap; }
@@ -159,7 +159,7 @@ namespace L4Re
      * First available reply capability index.
      * \return First reply capability index.
      *
-     * First reply capability selector index for use for in the application.
+     * First reply capability index for use for in the application.
      */
     l4_umword_t first_free_reply_cap() const noexcept
     { return _env.first_free_reply_cap; }
@@ -198,11 +198,11 @@ namespace L4Re
     { return l4re_env_get_cap_l(name, l, &_env); }
 
     /**
-     * Get the capability selector for the object named \a name.
+     * Get the capability index for the object named \a name.
      * \param name is the name of the object.
      * \param l is the length of the name, thus \a name might not be
      *          zero terminated.
-     * \return A capability selector for the object named \a name,
+     * \return A capability index for the object named \a name,
      *         or an invalid capability selector if no such object was found.
      */
     template< typename T >
@@ -215,9 +215,9 @@ namespace L4Re
     }
 
     /**
-     * Get the capability selector for the object named \a name.
+     * Get the capability index for the object named \a name.
      * \param name is the name of the object (zero terminated).
-     * \return A capability selector for the object named \a name,
+     * \return A capability index for the object named \a name,
      *         or an invalid capability selector if no such object was found.
      */
     template< typename T >
@@ -261,8 +261,8 @@ namespace L4Re
     void factory(L4::Cap<L4::Factory> const &c) noexcept
     { _env.factory = c.cap(); }
     /**
-     * Set first available capability selector.
-     * \param c First capability selector available to the application.
+     * Set first available object capability index.
+     * \param c First object capability index available to the application.
      */
     void first_free_cap(l4_cap_idx_t c) noexcept
     { _env.first_free_cap = c; }
@@ -287,7 +287,7 @@ namespace L4Re
 
     /**
      * Get the scheduler capability for the task.
-     * \return The capability selector for the default scheduler used for this
+     * \return The capability index for the default scheduler used for this
      *         task.
      */
     L4::Cap<L4::Scheduler> scheduler() const noexcept

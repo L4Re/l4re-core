@@ -36,7 +36,7 @@
  *      that the invoking thread is not migrated to a different CPU during the
  *      suspend.
  *
- * \param pfc     Capability selector for the platform-control object.
+ * \param pfc     Capability index for the platform-control object.
  * \param extras  Some extra platform-specific information needed to enter
  *                suspend to RAM. On x86 platforms and when using the
  *                Platform_control object provided by Fiasco, the value
@@ -62,7 +62,7 @@ l4_platform_ctl_system_suspend_u(l4_cap_idx_t pfc,
 /**
  * Shutdown or reboot the system.
  *
- * \param pfc     Capability selector for the platform-control object.
+ * \param pfc     Capability index for the platform-control object.
  * \param reboot  Shutdown when 0, or reboot when 1.
  *
  * \return Syscall return tag
@@ -82,7 +82,7 @@ l4_platform_ctl_system_shutdown_u(l4_cap_idx_t pfc,
 /**
  * Allow a CPU to be shut down.
  *
- * \param pfc      Capability selector for the platform-control object.
+ * \param pfc      Capability index for the platform-control object.
  * \param phys_id  Physical CPU id of CPU (e.g. local APIC id) to enable.
  * \param enable   Allow shutdown when 1, disallow when 0.
  *

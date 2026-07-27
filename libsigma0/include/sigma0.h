@@ -88,7 +88,7 @@ L4_BEGIN_DECLS
 /**
  * Map the kernel info page from sigma0 to addr.
  *
- * \param sigma0     Capability selector for the sigma0 gate.
+ * \param sigma0     Capability index for the sigma0 gate.
  * \param addr       Start of the receive window to receive KIP in.
  * \param log2_size  Size of the receive window to receive KIP in.
  *
@@ -100,7 +100,7 @@ l4sigma0_map_kip(l4_cap_idx_t sigma0, void *addr, unsigned log2_size);
 /**
  * Request a memory mapping from sigma0.
  *
- * \param sigma0  Capability selector for the sigma0 gate.
+ * \param sigma0  Capability index for the sigma0 gate.
  * \param phys    The physical address of the requested page (must be at least
  *                aligned to the minimum page size).
  * \param virt    The virtual address where the paged should be mapped in the
@@ -132,7 +132,7 @@ L4_CV int l4sigma0_map_mem(l4_cap_idx_t sigma0,
 /**
  * Request IO memory from sigma0.
  *
- * \param sigma0  Capability selector for the sigma0 gate.
+ * \param sigma0  Capability index for the sigma0 gate.
  * \param phys    The physical address to be requested (page aligned).
  * \param virt    The virtual address where the memory should be mapped to
  *                (page aligned).
@@ -156,7 +156,7 @@ L4_CV int l4sigma0_map_iomem(l4_cap_idx_t sigma0, l4_addr_t phys,
 /**
  * Request an arbitrary free page of RAM.
  *
- * \param sigma0         Capability selector for the sigma0 gate.
+ * \param sigma0         Capability index for the sigma0 gate.
  * \param map_area       The base address of the local virtual memory area
  *                       where the page should be mapped.
  * \param log2_map_size  The size of the requested page log 2 (the size in
@@ -184,7 +184,7 @@ L4_CV int l4sigma0_map_anypage(l4_cap_idx_t sigma0, l4_addr_t map_area,
 /**
  * Request sigma0 to dump internal debug information.
  *
- * \param sigma0  Capability selector for the sigma0 gate.
+ * \param sigma0  Capability index for the sigma0 gate.
  *
  * The debug information, such as internal memory maps, as well as statistics
  * about the internal allocators is dumped to the kernel debugger.

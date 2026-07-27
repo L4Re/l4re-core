@@ -68,7 +68,7 @@ using Def_reply_cap_alloc = Reply_cap_alloc<CONFIG_L4RE_CAP_DFL_ALLOCATOR_MAX>;
  *
  * The capability allocator uses the Counting_cap_alloc, a
  * reference-counting thread-safe capability allocator, that keeps a
- * reference counter for each managed capability selector.
+ * reference counter for each managed capability slot.
  */
 extern _Cap_alloc cap_alloc;
 
@@ -153,12 +153,12 @@ public:
 
 /**
  * Automatic capability that implements automatic free and
- * unmap of the capability selector.
+ * unmap of the capability slot.
  *
  * \tparam T  Type of the object that is referred by the capability.
  *
  * This kind of automatic capability implements a counted reference to a
- * capability selector. The capability shall be unmapped and freed
+ * capability slot. The capability shall be unmapped and freed
  * when the reference count in the allocator goes to zero.
  *
  * Usage:
@@ -168,7 +168,7 @@ public:
  * {
  *   L4Re::Util::Ref_cap<L4Re::Dataspace>::Cap
  *     ds_cap(L4Re::Util::cap_alloc.alloc<L4Re::Dataspace>());
- *   // reference count for the allocated cap selector is now 1
+ *   // reference count for the allocated capability slot is now 1
  *
  *   // use the dataspace cap
  *   L4Re::chksys(mem_alloc->alloc(4096, ds_cap.get()));
@@ -188,12 +188,12 @@ struct Ref_cap
 
 /**
  * Automatic capability that implements automatic free and
- * unmap+delete of the capability selector.
+ * unmap+delete of the capability slot.
  *
  * \tparam T  Type of the object that is referred by the capability.
  *
  * This kind of automatic capability implements a counted reference to a
- * capability selector. The capability shall be unmapped and freed
+ * capability slot. The capability shall be unmapped and freed
  * when the reference count in the allocator goes to zero.
  * The main difference to Ref_cap is that the unmap is done with the
  * deletion flag enabled and this leads to the deletion of the object
@@ -206,7 +206,7 @@ struct Ref_cap
  * {
  *   L4Re::Util::Ref_del_cap<L4Re::Dataspace>::Cap
  *     ds_cap(L4Re::Util::cap_alloc.alloc<L4Re::Dataspace>());
- *   // reference count for the allocated cap selector is now 1
+ *   // reference count for the allocated capability slot is now 1
  *
  *   // use the dataspace cap
  *   L4Re::chksys(mem_alloc->alloc(4096, ds_cap.get()));

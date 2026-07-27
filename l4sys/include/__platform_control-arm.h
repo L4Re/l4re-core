@@ -20,8 +20,8 @@
  *
  * The caller must have write permissions to the destination task.
  *
- * \param pfc     Capability selector for the platform-control object.
- * \param task    Capability selector of destination task
+ * \param pfc     Capability index for the platform-control object.
+ * \param task    Capability index of destination task
  * \param asid    New ASID value
  *
  * \return Syscall return tag

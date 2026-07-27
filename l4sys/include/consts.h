@@ -20,7 +20,7 @@
 #include <l4/sys/l4int.h>
 
 /**
- * \defgroup l4_syscall_flags Capability selector flags
+ * \defgroup l4_syscall_flags Syscall flags
  * \ingroup l4_ipc_api
  *
  * These flags determine the concrete operation when a kernel object
@@ -61,7 +61,7 @@
  * Send-phase flag.
  * \hideinitializer
  *
- * Setting this flag in a capability selector induces a send phase,
+ * Setting this flag induces a send phase,
  * this means a message is sent to the object denoted by the capability.
  * For receive phase see #L4_SYSF_RECV.
  *
@@ -74,7 +74,7 @@
  * Receive-phase flag.
  * \hideinitializer
  *
- * Setting this flag in a capability selector induces a receive phase,
+ * Setting this flag induces a receive phase,
  * this means the invoking thread waits for a message from the object
  * denoted by the capability.
  * For a send phase see #L4_SYSF_SEND.
@@ -149,7 +149,7 @@
 #define L4_CAP_SIZE    (1UL << L4_CAP_SHIFT)
 /**
  * \ingroup l4_cap_api
- * Offset of two consecutive capability selectors. \hideinitializer
+ * Offset of two consecutive capability indices. \hideinitializer
  */
 #define L4_CAP_OFFSET  (1UL << L4_CAP_SHIFT)
 /**
@@ -329,7 +329,7 @@ enum l4_buffer_desc_consts_t
  * \ingroup l4_cap_api
  * Default capabilities setup for the initial tasks.
  *
- * These capability selectors are setup per default by the micro kernel
+ * These capability indices are setup per default by the micro kernel
  * for the two initial tasks, the Root-Pager (Sigma0) and the Root-Task
  * (Moe).
  *
@@ -340,14 +340,14 @@ enum l4_buffer_desc_consts_t
  */
 enum l4_default_caps_t
 {
-  /// Capability selector for the current task. \hideinitializer
+  /// Capability index for the current task. \hideinitializer
   L4_BASE_TASK_CAP      = 1UL << L4_CAP_SHIFT,
-  /// Capability selector for the factory.      \hideinitializer
+  /// Capability index for the factory.      \hideinitializer
   L4_BASE_FACTORY_CAP   = 2UL << L4_CAP_SHIFT,
-  /// Capability selector for the first thread. \hideinitializer
+  /// Capability index for the first thread. \hideinitializer
   L4_BASE_THREAD_CAP    = 3UL << L4_CAP_SHIFT,
   /**
-   * Capability selector for the pager gate.
+   * Capability index for the pager gate.
    *
    * \hideinitializer
    * For Sigma0, the pager is not present since it never raises page faults.
@@ -355,33 +355,33 @@ enum l4_default_caps_t
    */
   L4_BASE_PAGER_CAP     = 4UL << L4_CAP_SHIFT,
   /**
-   * Capability selector for the log object.
+   * Capability index for the log object.
    *
    * \hideinitializer
    * Present if the corresponding feature is turned on in the microkernel
    * configuration.
    */
   L4_BASE_LOG_CAP       = 5UL << L4_CAP_SHIFT,
-  /// Capability selector for the base icu object.   \hideinitializer
+  /// Capability index for the base icu object.   \hideinitializer
   L4_BASE_ICU_CAP       = 6UL << L4_CAP_SHIFT,
-  /// Capability selector for the scheduler cap.   \hideinitializer
+  /// Capability index for the scheduler cap.   \hideinitializer
   L4_BASE_SCHEDULER_CAP = 7UL << L4_CAP_SHIFT,
   /**
-   * Capability selector for the IO-MMU cap.
+   * Capability index for the IO-MMU cap.
    *
    * \hideinitializer
    * Present if the microkernel detected an IO-MMU.
    */
   L4_BASE_IOMMU_CAP     = 8UL << L4_CAP_SHIFT,
   /**
-   * Capability selector for the debugger cap.
+   * Capability index for the debugger cap.
    *
    * \hideinitializer
    * Present if the corresponding feature is turned on in the microkernel
    * configuration.
    */
   L4_BASE_DEBUGGER_CAP  = 10UL << L4_CAP_SHIFT,
-  /** Capability selector for the ARM SMCCC cap.
+  /** Capability index for the ARM SMCCC cap.
    *
    * \hideinitializer
    * Present if the microkernel detected an ARM SMC capable trusted execution

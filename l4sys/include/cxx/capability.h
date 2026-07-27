@@ -57,7 +57,7 @@ public:
   bool is_valid() const noexcept { return !(_c & L4_INVALID_CAP_BIT); }
 
   /**
-   * Return the transported error code in an invalid capability index.
+   * Return the transported error code in an invalid capability selector.
    */
   int invalid_cap_error() const noexcept { return _c & ~L4_INVALID_CAP_BIT; }
 
@@ -112,7 +112,7 @@ public:
    * \retval "l4_msgtag_t::label() > 0"   Capability is present (refers to an
    *                                      object).
    * \retval "l4_msgtag_t::label() == 0"  No capability present (void object or
-   *                                      invalid capability slot).
+   *                                      invalid capability selector).
    *
    * A capability is considered present when it refers to an existing
    * kernel object.
@@ -128,7 +128,7 @@ public:
    * \retval "l4_msgtag_t::label() > 0"   Capability is present (refers to an
    *                                      object).
    * \retval "l4_msgtag_t::label() == 0"  No capability present (void object or
-   *                                      invalid capability slot).
+   *                                      invalid capability selector).
    *
    * A capability is considered present when it refers to an existing
    * kernel object.
@@ -319,7 +319,7 @@ public:
   explicit Cap(l4_cap_idx_t idx = L4_INVALID_CAP) noexcept : Cap_base(idx) {}
 
   /**
-   * \brief Create an uninitialized cap selector.
+   * \brief Create an uninitialized capability selector.
    */
   explicit Cap(No_init_type) noexcept {}
 
@@ -471,7 +471,9 @@ Cap<T> cap_reinterpret_cast(Cap<F> const &c) noexcept
 }
 
 /**
- * Value class for a reply capability index.
+ * Value class for optional reply capability index.
+ *
+ * Optional means that the value can be invalid (see #L4_INVALID_CAP_BIT).
  */
 class Reply_cap_idx
 {
@@ -531,7 +533,7 @@ protected:
    *
    * The slot must have been allocated by the same allocator.
    *
-   * \param cap The reply cap slot to free.
+   * \param cap The reply capability slot to free.
    */
   virtual void free(Reply_cap_idx cap) noexcept = 0;
 };

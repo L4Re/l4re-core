@@ -201,9 +201,9 @@ l4_thread_control_start_u(l4_utcb_t *utcb) L4_NOTHROW;
  * Set the pager.
  * \ingroup l4_thread_control_api
  *
- * \param pager     Capability selector invoked to send a page-fault IPC.
+ * \param pager     Capability index invoked to send a page-fault IPC.
  *
- * \note The pager capability selector is interpreted in the task the thread
+ * \note The pager capability index is interpreted in the task the thread
  *       is bound to (executes in).
  */
 L4_INLINE void
@@ -220,9 +220,9 @@ l4_thread_control_pager_u(l4_cap_idx_t pager, l4_utcb_t *utcb) L4_NOTHROW;
  * Set the exception handler.
  * \ingroup l4_thread_control_api
  *
- * \param exc_handler  Capability selector invoked to send an exception IPC.
+ * \param exc_handler  Capability index invoked to send an exception IPC.
  *
- * \note The exception-handler capability selector is interpreted in the task
+ * \note The exception-handler capability index is interpreted in the task
  *       the thread is bound to (executes in).
  */
 L4_INLINE void
@@ -551,7 +551,7 @@ l4_thread_vcpu_control_ext_u(l4_cap_idx_t thread, l4_addr_t ext_vcpu_state,
  * \ingroup l4_thread_api
  *
  * \param thread  Thread to register IRQ for.
- * \param irq     Capability selector for the IRQ object to be triggered.
+ * \param irq     Capability index for the IRQ object to be triggered.
  *
  * \return System call return tag containing the return code.
  *
@@ -695,7 +695,7 @@ l4_thread_modify_sender_commit_u(l4_cap_idx_t thread, l4_msgtag_t tag,
  * \ingroup l4_thread_api
  *
  * \param thread  Thread to register IRQ for.
- * \param irq     Capability selector for the IRQ object to be triggered.
+ * \param irq     Capability index for the IRQ object to be triggered.
  *
  * \return System call return tag containing the return code.
  *
