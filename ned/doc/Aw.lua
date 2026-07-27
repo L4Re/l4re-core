@@ -141,11 +141,11 @@ end
 
 
 -- Get the Hw frame-buffer capability.
--- This function either uses the 'vesa' capability provided by moe
--- or starts fb-drv if 'vesa' is not available.
+-- This function either uses the 'fb' capability provided by moe
+-- or starts fb-drv if 'fb' is not available.
 -- @return The capability to the Hw Goos object.
 function fb(...)
-  local fb = L4.Env.vesa;
+  local fb = L4.Env.fb;
   if fb then
     return fb;
   end

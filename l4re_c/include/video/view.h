@@ -22,7 +22,7 @@
  */
 enum l4re_video_view_info_flags_t
 {
-  F_l4re_video_view_none               = 0x00, ///< everything for this view is static (the VESA-FB case)
+  F_l4re_video_view_none               = 0x00, ///< everything for this view is static (the BOOT-FB case)
   F_l4re_video_view_set_buffer         = 0x01, ///< buffer object for this view can be changed
   F_l4re_video_view_set_buffer_offset  = 0x02, ///< buffer offset can be set
   F_l4re_video_view_set_bytes_per_line = 0x04, ///< bytes per line can be set

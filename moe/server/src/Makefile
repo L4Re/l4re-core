@@ -15,7 +15,7 @@ SRC_CC          = main.cc page_alloc.cc dataspace.cc dataspace_cont.cc \
                   delete.cc server_obj.cc \
                   dma_space.cc
 
-SRC_CC-$(CONFIG_MOE_VESA_FB)  = vesa_fb.cc
+SRC_CC-$(CONFIG_MOE_BOOT_FB)  = boot_fb.cc
 
 SRC_S          := ARCH-$(ARCH)/crt0.S
 MODE            = sigma0

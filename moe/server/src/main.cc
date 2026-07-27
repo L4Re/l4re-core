@@ -42,7 +42,7 @@
 #include "name_space.h"
 #include "page_alloc.h"
 #include "pages.h"
-#include "vesa_fb.h"
+#include "boot_fb.h"
 #include "dataspace_static.h"
 #include "debug.h"
 #include "args.h"
@@ -605,7 +605,7 @@ int main(int /* argc */, char** /* argv */)
       page_alloc_debug = 1;
 #endif
       Moe::Boot_fs::init_stage2();
-      init_vesa_fb((l4util_l4mod_info *)kip()->user_ptr);
+      init_boot_fb((l4util_l4mod_info *)kip()->user_ptr);
 
       root_name_space_obj = object_pool.cap_alloc()->alloc(root_name_space(),
                                                            "moe-root-ns");

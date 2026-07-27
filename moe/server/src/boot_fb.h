@@ -8,9 +8,9 @@
 
 #include <l4/util/l4mod.h>
 
-#ifdef CONFIG_MOE_VESA_FB
-void init_vesa_fb(l4util_l4mod_info *mbi);
+#ifdef CONFIG_MOE_BOOT_FB
+void init_boot_fb(l4util_l4mod_info *mbi);
 #else
-static inline void init_vesa_fb(l4util_l4mod_info *)
+static inline void init_boot_fb(l4util_l4mod_info *)
 {}
 #endif

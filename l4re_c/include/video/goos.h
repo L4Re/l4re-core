@@ -116,8 +116,9 @@ l4re_video_goos_delete_buffer(l4re_video_goos_t goos, unsigned idx) L4_NOTHROW;
  * \param idx     Index of the static buffer.
  * \param buffer  A capability index to receive the data-space capability.
  *
- * This function allows access to static, preexisting pixel buffers. Such static buffers
- * exist for static configurations, such as the VESA framebuffer.
+ * This function allows access to static, preexisting pixel buffers. Such
+ * static buffers exist for static configurations, such as the bootloader's
+ * framebuffer.
  */
 L4_CV int
 l4re_video_goos_get_static_buffer(l4re_video_goos_t goos, unsigned idx,
@@ -152,9 +153,9 @@ l4re_video_goos_delete_view(l4re_video_goos_t goos,
  * \param      idx   the index of the view to retrieve.
  * \param[out] view  structure initialized to the view with the given index.
  *
- * This function allows to access static views as provided by the
- * VESA framebuffer (the monitor). However, it also allows to access
- * dynamic views created with l4re_video_goos_create_view().
+ * This function allows to access static views as provided, for example, by
+ * the bootloader's framebuffer. However, it also allows to access dynamic
+ * views created with l4re_video_goos_create_view().
  */
 L4_CV int
 l4re_video_goos_get_view(l4re_video_goos_t goos, unsigned idx,

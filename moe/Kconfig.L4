@@ -9,11 +9,12 @@ config MOE_DEBUG_NAMES
 
 	  This is a debugging and development feature.
 
-config MOE_VESA_FB
-	bool "Support for VESA frame buffer"
+config MOE_BOOT_FB
+	bool "Pass-on the bootloader's frame buffer"
 	default y
 	help
-	  Add support to expose the VESA frame buffer as special dataspace.
+	  Add support to expose the bootloader's frame buffer as special
+	  dataspace.
 
 	  If unsure, say y.
 

@@ -23,16 +23,16 @@
 #include "name_space.h"
 #include "page_alloc.h"
 #include "pages.h"
-#include "vesa_fb.h"
+#include "boot_fb.h"
 
 #include <l4/re/util/video/goos_svr>
 #include <l4/sys/cxx/ipc_epiface>
 
 using L4Re::Dataspace;
 
-class Vesa_fb :
+class Boot_fb :
   public L4Re::Util::Video::Goos_svr,
-  public L4::Epiface_t<Vesa_fb, L4Re::Video::Goos, Moe::Server_object>
+  public L4::Epiface_t<Boot_fb, L4Re::Video::Goos, Moe::Server_object>
 {
 private:
   l4util_mb_vbe_ctrl_t *vbe;
@@ -41,18 +41,18 @@ private:
   unsigned long map_size;
 
 public:
-  Vesa_fb(l4util_l4mod_info *mbi);
-  virtual ~Vesa_fb() {}
+  Boot_fb(l4util_l4mod_info *mbi);
+  virtual ~Boot_fb() {}
 };
 
 void
-init_vesa_fb(l4util_l4mod_info *mbi)
+init_boot_fb(l4util_l4mod_info *mbi)
 {
-  static Vesa_fb video(mbi);
+  static Boot_fb video(mbi);
   (void)video;
 }
 
-Vesa_fb::Vesa_fb(l4util_l4mod_info *mbi)
+Boot_fb::Boot_fb(l4util_l4mod_info *mbi)
 {
   vbe = (l4util_mb_vbe_ctrl_t*)(unsigned long)mbi->vbe_ctrl_info;
   vbi = (l4util_mb_vbe_mode_t*)(unsigned long)mbi->vbe_mode_info;
@@ -66,7 +66,7 @@ Vesa_fb::Vesa_fb(l4util_l4mod_info *mbi)
 
   if (phys_base > (L4Re::Dma_space::Dma_addr)ULONG_MAX)
     {
-      L4::cerr << "VESA video memory outside of mappable range\n";
+      L4::cerr << "Frame buffer memory outside of mappable range\n";
       return;
     }
 
@@ -83,7 +83,7 @@ Vesa_fb::Vesa_fb(l4util_l4mod_info *mbi)
     vaddr = (unsigned long)Single_page_alloc_base::_alloc(map_size);
   if (vaddr == 0)
     {
-      L4::cerr << "Failed to get memory for VESA video memory\n";
+      L4::cerr << "Failed to get memory for frame buffer memory\n";
       return;
     }
 #else
@@ -117,10 +117,10 @@ Vesa_fb::Vesa_fb(l4util_l4mod_info *mbi)
 
   _fb_ds = L4::cap_cast<L4Re::Dataspace>(object_pool.cap_alloc()->alloc(fb, "moe-fb-ds"));
 
-  object_pool.cap_alloc()->alloc(this, "moe-vesa");
-  root_name_space()->register_obj("vesa", 0, this);
+  object_pool.cap_alloc()->alloc(this, "moe-fb");
+  root_name_space()->register_obj("fb", 0, this);
 
-  L4::cout << "  VESAFB: " << obj_cap() << _fb_ds
+  L4::cout << "  BOOTFB: " << obj_cap() << _fb_ds
     << " @" << (void*)(unsigned long)phys_base
     << " (size=" << L4::hex << 64*1024*vbe->total_memory << ")\n" << L4::dec;
 

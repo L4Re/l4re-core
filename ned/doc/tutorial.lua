@@ -161,7 +161,7 @@ application. And 'log' for modifying the logger tag and color.
 ]==]
 
 local my_caps = {
-  fb = L4.Env.vesa;
+  fb = L4.Env.fb;
 };
 
 L4.default_loader:start({caps = my_caps, log = {"APP", "blue"}}, "rom/hello");
