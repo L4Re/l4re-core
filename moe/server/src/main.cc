@@ -503,6 +503,39 @@ parse_option(cxx::String const &o)
     }
 }
 
+static cxx::String parse_cmdline()
+{
+  char *cmdline = my_cmdline();
+  info.printf("cmdline: %s\n", cmdline);
+
+  cxx::String init_args("");
+  bool skip_argv0 = true;
+  cxx::Pair<cxx::String, cxx::String> a;
+  for (a = next_arg(cmdline); !a.first.empty(); a = next_arg(a.second))
+    {
+      if (skip_argv0)
+        {
+          skip_argv0 = false;
+          continue;
+        }
+
+      if (a.first[0] != '-') // not an option start init
+        {
+          init_args = cxx::String(a.first.start(), a.second.end());
+          break;
+        }
+
+      if (a.first == "--")
+        {
+          init_args = a.second;
+          break;
+        }
+
+      parse_option(a.first);
+    }
+  return init_args;
+}
+
 static cxx::Static_container<Moe::Dma_space_mgr> dma_space_mgr;
 static Elf_loader elf_loader;
 static L4::Server<Loop_hooks> server;
@@ -555,35 +588,7 @@ int main(int /* argc */, char** /* argv */)
       find_memory();
       init_virt_limits();
 
-      char *cmdline = my_cmdline();
-      cxx::String init_args("");
-
-      info.printf("cmdline: %s\n", cmdline);
-
-      bool skip_argv0 = true;
-      cxx::Pair<cxx::String, cxx::String> a;
-      for (a = next_arg(cmdline); !a.first.empty(); a = next_arg(a.second))
-        {
-          if (skip_argv0)
-            {
-              skip_argv0 = false;
-              continue;
-            }
-
-          if (a.first[0] != '-') // not an option start init
-            {
-              init_args = cxx::String(a.first.start(), a.second.end());
-              break;
-            }
-
-          if (a.first == "--")
-            {
-              init_args = a.second;
-              break;
-            }
-
-          parse_option(a.first);
-        }
+      cxx::String init_args = parse_cmdline();
 
 #if 0
       extern unsigned page_alloc_debug;
