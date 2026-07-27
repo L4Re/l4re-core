@@ -23,21 +23,21 @@ L4_RPC_DEF(L4Re::Dataspace::map_info);
 namespace L4Re {
 
 l4_ret_t
-Dataspace::__map(Dataspace::Offset offset, unsigned char *size,
+Dataspace::__map(Dataspace::Offset offset, unsigned char *order,
                  Dataspace::Flags flags,
                  Dataspace::Map_addr local_addr,
                  L4::Cap<L4::Task> dst) const noexcept
 {
-  Map_addr spot = local_addr & ~(~0ULL << l4_umword_t(*size));
-  Map_addr base = local_addr & (~0ULL << l4_umword_t(*size));
-  L4::Ipc::Rcv_fpage r = L4::Ipc::Rcv_fpage::mem(base, *size, 0, dst);
+  Map_addr spot = local_addr & ~(~0ULL << l4_umword_t(*order));
+  Map_addr base = local_addr & (~0ULL << l4_umword_t(*order));
+  L4::Ipc::Rcv_fpage r = L4::Ipc::Rcv_fpage::mem(base, *order, 0, dst);
 
   L4::Ipc::Snd_fpage fp;
   l4_ret_t err = map_t::call(c(), offset, spot, flags, r, fp, l4_utcb());
   if (L4_UNLIKELY(err < 0))
     return err;
 
-  *size = fp.rcv_order();
+  *order = fp.rcv_order();
   return err;
 }
 
