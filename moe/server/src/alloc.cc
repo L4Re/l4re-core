@@ -232,11 +232,15 @@ Allocator::op_create(L4::Factory::Rights, L4::Ipc::Cap<void> &res,
         {
           L4::Ipc::Varg size  = args.pop_front(),
                         flags = args.pop_front(),
-                        align = args.pop_front(),
-                        base  = args.pop_front();
+                        align = args.pop_front();
 
           if (!size.is_of_int())
             return -L4_EINVAL;
+
+          l4_umword_t flags_val = flags.is_of_int() ? flags.value<l4_umword_t>() : 0;
+          L4::Ipc::Varg base = L4::Ipc::Varg::nil();
+          if (flags_val & L4Re::Mem_alloc::Fixed_paddr)
+            base = args.pop_front();
 
           Single_page_alloc_base::Config mem_cfg(Single_page_alloc_base::default_mem_cfg);
 
@@ -263,7 +267,7 @@ Allocator::op_create(L4::Factory::Rights, L4::Ipc::Cap<void> &res,
           //          << "; [" << L4::hex << mem_cfg.physmin
           //          << " .. " << mem_cfg.physmax << "]\n";
           cxx::unique_ptr<Moe::Dataspace> mo(alloc(size.value<l4_mword_t>(),
-                flags.is_of_int() ? flags.value<l4_umword_t>() : 0,
+                flags_val,
                 align.is_of_int() ? align.value<l4_umword_t>() : 0,
                 mem_cfg));
 
