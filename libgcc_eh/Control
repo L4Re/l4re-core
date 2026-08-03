@@ -1,4 +1,4 @@
 provides: libgcc_eh
-requires: libc-headers ldscripts l4sys libgcc_eh-headers
+requires: libc-headers ldscripts l4sys libgcc_eh-headers libgcc-headers
 source-pkg: libgcc
 maintainer: georg.kotheimer@kernkonzept.com

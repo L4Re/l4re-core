@@ -9,7 +9,7 @@ PC_LIBS_PIC     = $(PC_LIBS)
 PC_LINK_LIBS    = -lgcc
 PC_LINK_LIBS_PIC = $(PC_LINK_LIBS)
 
-REQUIRES_LIBS   = l4sys
+REQUIRES_LIBS   = l4sys libgcc-headers
 # Avoid circular dependency, as this package is part of the compiler runtime.
 COMPILER_RT     =
 

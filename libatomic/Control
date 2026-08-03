@@ -1,3 +1,3 @@
 provides: libatomic
-requires: libc-headers l4sys
+requires: libc-headers libgcc-headers l4sys
 maintainer: georg.kotheimer@kernkonzept.com

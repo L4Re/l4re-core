@@ -9,6 +9,7 @@ PC_LIBS         =
 PC_LINK_LIBS    = $(if $(CONFIG_COMPILER_RT_LIBGCC_SHARED),%{static|static-pie|static-libgcc:-lgcc_eh},-lgcc_eh)
 PC_LINK_LIBS_PIC = $(PC_LINK_LIBS)
 
+REQUIRES_LIBS   = libgcc-headers
 # Avoid circular dependency, as this package is part of the compiler runtime.
 COMPILER_RT     =
 
