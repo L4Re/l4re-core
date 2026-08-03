@@ -80,7 +80,7 @@ Boot_fb::Boot_fb(l4util_l4mod_info *mbi)
   unsigned long vaddr
       = l4_round_size(Moe::Pages::max_addr, L4_SUPERPAGESHIFT);
   if (vaddr >= Moe::Virt_limit::end - map_size - L4_SUPERPAGESIZE)
-    vaddr = (unsigned long)Single_page_alloc_base::_alloc(map_size);
+    vaddr = (unsigned long)Single_page_alloc_base::_alloc(map_size, L4_PAGESIZE);
   if (vaddr == 0)
     {
       L4::cerr << "Failed to get memory for frame buffer memory\n";

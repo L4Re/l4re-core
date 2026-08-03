@@ -40,9 +40,9 @@ public:
   static void *_alloc_max(unsigned long min, unsigned long *max,
                           unsigned align, unsigned granularity,
                           Config cfg);
-  static void *_alloc(Nothrow, unsigned long size, unsigned long align = 0,
+  static void *_alloc(Nothrow, unsigned long size, unsigned long align,
                       Config cfg = default_mem_cfg);
-  static void *_alloc(unsigned long size, unsigned long align = 0,
+  static void *_alloc(unsigned long size, unsigned long align,
                       Config cfg = default_mem_cfg)
   {
     void *r = _alloc(nothrow, size, align, cfg);

@@ -212,8 +212,8 @@ static void find_memory()
   assert(total_pages);
 
   using Moe::Pages::pages;
-  pages = static_cast<__typeof(pages)>(
-            Single_page_alloc_base::_alloc(sizeof(*pages) * total_pages));
+  pages = static_cast<decltype(pages)>(Single_page_alloc_base::_alloc(
+    sizeof(*pages) * total_pages, alignof(decltype(*pages))));
 
   if (pages == 0)
     {
