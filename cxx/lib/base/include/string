@@ -24,7 +24,7 @@ namespace cxx {
  * to one syntactical token types number, identifier, string,
  * whitespace or another single character.
  *
- * Stings in this class can contain null bytes and may denote parts of
+ * Strings in this class can contain null bytes and may denote parts of
  * other strings.
  */
 class String
