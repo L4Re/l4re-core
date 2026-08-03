@@ -1,3 +1,17 @@
+2026-07-04  Iain Sandoe  <iain@sandoe.co.uk>
+
+	Backported from master:
+	2026-07-04  Iain Sandoe  <iain@sandoe.co.uk>
+
+	PR libgcc/123976
+	* config/t-darwin-ehs: Add md-unwind-def.h as a
+	pre-requisite.
+
+2026-06-12  Ramin Moussavi  <lordrasmus@gmail.com>
+
+	* config.host (microblaze*-linux*): Set md_unwind_header.
+	* config/microblaze/linux-unwind.h: New file.
+
 2026-06-12  Release Manager
 
 	* GCC 15.3.0 released.
