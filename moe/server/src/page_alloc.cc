@@ -8,7 +8,6 @@
 
 #include <l4/cxx/iostream>
 #include <l4/cxx/exceptions>
-#include <l4/sys/kdebug.h>
 #include "page_alloc.h"
 #include "debug.h"
 
