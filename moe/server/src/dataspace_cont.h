@@ -21,7 +21,7 @@ public:
                  Flags flags,
                  unsigned char page_shift,
                  Single_page_alloc_base::Config cfg
-                   = Single_page_alloc_base::Config());
+                   = Single_page_alloc_base::default_mem_cfg);
 
   ~Dataspace_cont() { unmap(); }
 

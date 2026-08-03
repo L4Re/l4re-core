@@ -21,7 +21,7 @@ public:
   Dataspace_anon(long size, Flags flags = L4Re::Dataspace::F::RWX,
                  unsigned char page_shift = L4_PAGESHIFT,
                  Single_page_alloc_base::Config cfg
-                   = Single_page_alloc_base::Config());
+                   = Single_page_alloc_base::default_mem_cfg);
   virtual ~Dataspace_anon();
 
   bool is_static() const noexcept override { return false; }
