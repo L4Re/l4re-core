@@ -247,9 +247,12 @@
 # define _SVID_SOURCE	1
 #endif
 
-/* This is to enable the ISO C11 extension.  */
+/* This is to enable the ISO C11 extension. ISO C++17 incorporates the
+   ISO C11 library, so enable it for C++17 as well: __STDC_VERSION__ is
+   not defined when compiling C++.  */
 #if (defined _ISOC11_SOURCE \
-     || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 201112L))
+     || (defined __STDC_VERSION__ && __STDC_VERSION__ >= 201112L) \
+     || (defined __cplusplus && __cplusplus >= 201703L))
 # define __USE_ISOC11	1
 #endif
 
