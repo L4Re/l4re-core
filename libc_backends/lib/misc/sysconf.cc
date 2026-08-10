@@ -106,6 +106,10 @@ long sysconf(int name)
     return 512;
   case _SC_CHILD_MAX:
     return 2000;
+  case _SC_LINE_MAX:
+    return 2048;
+  case _SC_NGROUPS_MAX:
+    return 32;
   default:
     break;
   }
