@@ -21,7 +21,7 @@ $(SYS_HDR_LOC):
 	$(VERBOSE)mkdir -p $@
 
 $(SYS_HDR_LOC)/.links-done: $(GENERAL_D_LOC) | $(SYS_HDR_LOC)
-	cd $(@D); \
+	$(VERBOSE)cd $(@D); \
 	for i in $(LIBGCC_CONTRIB_DIR)/gcc/ginclude/*; do $(LN) -sf $$i; done; \
 	for i in $(LIBGCC_CONTRIB_DIR)/install-include/*; do $(LN) -sf $$i; done; \
 	for i in $(LIBGCC_CONTRIB_DIR)/gcc/config/$(CPU_TYPE)/*; do $(LN) -sf $$i; done; \
