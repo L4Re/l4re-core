@@ -54,9 +54,6 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 #include "aarch64-asm.h"
 #include "auto-target.h"
 
-# NOTE: Suppress macro redefinition warning.
-#undef L
-
 /* Tell the assembler to accept LSE instructions.  */
 #ifdef HAVE_AS_LSE
 	.arch armv8-a+lse
