@@ -148,18 +148,22 @@ namespace L4Re
     L4::Cap<L4::Factory> factory() const noexcept
     { return L4::Cap<L4::Factory>(_env.factory); }
     /**
-     * First available object capability index.
-     * \return First object capability index.
+     * First available object capability index (***not*** shifted by
+     * #L4_CAP_SHIFT).
+     * \return First available object capability index (*not* shifted).
      *
-     * First object capability index available for use for in the application.
+     * First object capability index (*not* shifted) available for use for in
+     * the application.
      */
     l4_cap_idx_t first_free_cap() const noexcept
     { return _env.first_free_cap; }
     /**
-     * First available reply capability index.
-     * \return First reply capability index.
+     * First available reply capability index (***not*** shifted by
+     * #L4_CAP_SHIFT).
+     * \return First available reply capability index (*not* shifted).
      *
-     * First reply capability index for use for in the application.
+     * First reply capability index (*not* shifted) for use for in the
+     * application.
      */
     l4_umword_t first_free_reply_cap() const noexcept
     { return _env.first_free_reply_cap; }
@@ -261,14 +265,18 @@ namespace L4Re
     void factory(L4::Cap<L4::Factory> const &c) noexcept
     { _env.factory = c.cap(); }
     /**
-     * Set first available object capability index.
-     * \param c First object capability index available to the application.
+     * Set first available object capability index (***not*** shifted by
+     * #L4_CAP_SHIFT).
+     * \param c  First object capability index (*not* shifted) available to the
+     *           application.
      */
     void first_free_cap(l4_cap_idx_t c) noexcept
     { _env.first_free_cap = c; }
     /**
-     * Set first available reply capability index.
-     * \param c First reply capability index available to the application.
+     * Set first available reply capability index (***not*** shifted by
+     * #L4_CAP_SHIFT).
+     * \param c First reply capability index (*not* shifted) available to the
+     * application.
      */
     void first_free_reply_cap(l4_umword_t c) noexcept
     { _env.first_free_reply_cap = c; }
