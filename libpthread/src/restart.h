@@ -35,10 +35,10 @@ static __inline__ void suspend(pthread_descr self)
 static __inline__ int timedsuspend(pthread_descr self,
 		const struct timespec *abstime)
 {
-  extern uint64_t __attribute__((weak)) __libc_l4_kclock_offset;
+  extern uint64_t __attribute__((weak)) __libc_l4_rt_clock_offset;
   uint64_t clock = abstime->tv_sec * 1000000ULL + abstime->tv_nsec / 1000;
-  if (&__libc_l4_kclock_offset)
-    clock -= __libc_l4_kclock_offset;
+  if (&__libc_l4_rt_clock_offset)
+    clock -= __libc_l4_rt_clock_offset;
   l4_timeout_t timeout = L4_IPC_NEVER;
   l4_rcv_timeout(l4_timeout_abs_u(clock, 4, l4_utcb()), &timeout);
   l4_msgtag_t res = l4_semaphore_down(self->p_thsem_cap, timeout);
