@@ -103,7 +103,7 @@ long sysconf(int name)
   case _SC_MONOTONIC_CLOCK:
     return 200112L;
   case _SC_OPEN_MAX:
-    return 512;
+    return 50; // must match l4re_vfs Fd_store::MAX_FILES
   case _SC_CHILD_MAX:
     return 2000;
   case _SC_LINE_MAX:
