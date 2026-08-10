@@ -116,5 +116,6 @@ long sysconf(int name)
     break;
   }
   fprintf(stderr, "%s: unknown command, name=%d\n", __func__, name);
-  return 0;
+  errno = EINVAL;
+  return -1;
 }
