@@ -1,3 +1,223 @@
+2026-08-01  Jakub Jelinek  <jakub@redhat.com>
+
+	Backported from master:
+	2026-03-18  Jakub Jelinek  <jakub@redhat.com>
+
+	* include/bits/regex_compiler.h (_Compiler::_M_pop): Uglify ret
+	variable name.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-04-24  Jonathan Wakely  <jwakely@redhat.com>
+
+	* include/std/chrono (chrono::__detail::__get_leap_second_info):
+	Update expiry date for leap seconds list.
+	* src/c++20/tzdb.cc (tzdb_list::_Node::_S_read_leap_seconds):
+	Likewise.
+	* src/c++20/tzdata.zi: Import new file from 2026a release.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2025-12-16  Jonathan Wakely  <jwakely@redhat.com>
+
+	* include/std/chrono (chrono::__detail::__get_leap_second_info):
+	Update expiry date for leap seconds list.
+	* src/c++20/tzdb.cc (tzdb_list::_Node::_S_read_leap_seconds):
+	Likewise.
+	* src/c++20/tzdata.zi: Import new file from 2025c release.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2025-06-11  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/120390
+	* include/bits/stl_construct.h (_Destroy_aux::__destroy_n): New
+	static member function.
+	(_Destroy_aux<true>::__destroy_n): Likewise.
+	(_Destroy_n_aux): Remove.
+	(_Destroy(ForwardIterator, ForwardIterator)): Remove
+	static_assert. Use is_trivially_destructible instead of
+	__has_trivial_destructor.
+	(_Destroy_n): Likewise. Use _Destroy_aux::__destroy_n instead of
+	_Destroy_n_aux::__destroy_n.
+	* testsuite/20_util/specialized_algorithms/memory_management_tools/destroy_neg.cc:
+	Adjust dg-error strings. Move destroy_n tests to ...
+	* testsuite/20_util/specialized_algorithms/memory_management_tools/destroy_n_neg.cc:
+	New test.
+	* testsuite/23_containers/vector/cons/destructible_debug_neg.cc:
+	Adjust dg-error strings.
+	* testsuite/23_containers/vector/cons/destructible_neg.cc:
+	Likewise.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2024-12-02  Jonathan Wakely  <jwakely@redhat.com>
+
+	* include/bits/stl_construct.h (_Destroy(FwdIter, FwdIter)): Use
+	'if constexpr' instead of dispatching to a member function of a
+	class template.
+	(_Destroy_n(FwdIter, Size)): Likewise.
+	(_Destroy_aux, _Destroy_n_aux): Only define for C++98.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2024-03-22  Jonathan Wakely  <jwakely@redhat.com>
+
+	* include/bits/stl_construct.h (construct_at): Guard
+	with feature test macros instead of just __cplusplus.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2024-12-09  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/102259
+	* config/io/basic_file_stdio.cc (basic_file::xsgetn): Limit n to
+	_GLIBCXX_MAX_READ_SIZE if that macro is defined.
+	* config/os/bsd/darwin/os_defines.h (_GLIBCXX_MAX_READ_SIZE):
+	Define to INT_MAX-1.
+	* config/os/bsd/freebsd/os_defines.h (_GLIBCXX_MAX_READ_SIZE):
+	Likewise.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-03-20  Jonathan Wakely  <jwakely@redhat.com>
+
+	* src/c++17/fs_path.cc (path::operator+=): Use pointer
+	comparison to detect aliasing instead of a loop.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2025-05-06  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/120029
+	* src/c++17/fs_path.cc (path::operator+=(const path&)): Handle
+	parameters that alias the path or one of its components.
+	* testsuite/27_io/filesystem/path/concat/120029.cc: New test.
+	* testsuite/experimental/filesystem/path/concat/120029.cc: New
+	test.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2025-05-19  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/120293
+	* include/bits/chrono_io.h (_M_format_to_ostream): Add special
+	case for local_time convertible to local_days.
+	* testsuite/std/time/clock/local/io.cc: Check formatting of
+	chrono::local_days.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2024-07-30  Jonathan Wakely  <jwakely@redhat.com>
+
+	* include/bits/chrono_io.h (__local_fmt_t): Remove unused
+	declaration.
+	(__formatter_chrono::_M_format_to_ostream): Add explicit
+	handling for specializations of __local_time_fmt, including the
+	time zone abbreviation in the output if __is_neg is true.
+	(formatter<chrono::tai_time<D>>::format): Add comment.
+	(formatter<chrono::gps_time<D>>::format): Likewise.
+	(formatter<chrono::__detail::__local_time_fmt::format): Call
+	_M_format with true for the __is_neg flag.
+	* testsuite/std/time/clock/gps/io.cc: Remove unused variable.
+	* testsuite/std/time/clock/local/io.cc: New file.
+	* testsuite/std/time/clock/system/io.cc: Check empty
+	chrono-specs.
+	* testsuite/std/time/clock/tai/io.cc: Likewise.
+	* testsuite/std/time/zoned_time/io.cc: Likewise.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-02-13  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/121771
+	* include/std/tuple (tuple::tuple(const Elements&...)): Use
+	type_identity_t to prevent constructor being used for CTAD.
+	(tuple::tuple(allocator_arg_t, const A&, const Elements&...)):
+	Likewise.
+	* testsuite/20_util/tuple/cons/121771.cc: New test.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-03-20  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/122567
+	* src/c++20/tzdb.cc (tzdb::current_zone): Loop over all trailing
+	components of /etc/localtime path. Use readlink instead of
+	std::filesystem::read_symlink.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-01-07  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/123100
+	* include/std/sstream (basic_stringbuf::str()&&): Handle the
+	case where _M_string is not being used for the buffer.
+	* testsuite/27_io/basic_stringbuf/str/char/123100.cc: New test.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2026-05-05  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/109965
+	* doc/doxygen/mainpage.html: Link to topics.html instead of
+	modules.html
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2024-12-18  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/118088
+	* include/bits/stl_queue.h (priority_queue(priority_queue&&)):
+	Clear the source object after moving from it.
+	(priority_queue(priority_queue&&, const Alloc&)): Likewise.
+	(operator=(priority_queue&&)): Likewise.
+	* testsuite/23_containers/priority_queue/118088.cc: New test.
+
+2026-05-14  Jonathan Wakely  <jwakely@redhat.com>
+
+	Backported from master:
+	2025-07-08  Jonathan Wakely  <jwakely@redhat.com>
+
+	PR libstdc++/118681
+	* src/c++17/memory_resource.cc (choose_block_size): New
+	function.
+	(synchronized_pool_resource::do_allocate): Use choose_block_size
+	to determine appropriate block size.
+	(synchronized_pool_resource::do_deallocate): Likewise
+	(unsynchronized_pool_resource::do_allocate): Likewise.
+	(unsynchronized_pool_resource::do_deallocate): Likewise
+	* testsuite/20_util/synchronized_pool_resource/118681.cc: New
+	test.
+	* testsuite/20_util/unsynchronized_pool_resource/118681.cc: New
+	test.
+
+2026-03-22  Jakub Jelinek  <jakub@redhat.com>
+
+	Backported from master:
+	2025-09-08  Jakub Jelinek  <jakub@redhat.com>
+
+	PR libstdc++/121827
+	* include/precompiled/extc++.h: Don't include ext/cast.h which is an
+	internal header.
+	* include/ext/pointer.h: Include bits/c++config.h before
+	#if _GLIBCXX_HOSTED.
+
 2026-03-20  Jonathan Wakely  <jwakely@redhat.com>
 
 	Backported from master:
