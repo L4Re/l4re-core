@@ -7,6 +7,7 @@
  * License: see LICENSE.spdx (in this directory or the directories above)
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <sched.h>
 #include <unistd.h>
@@ -42,6 +43,28 @@ static long num_online_cpus(void)
   return count > 0 ? count : 1;
 }
 
+static long
+phys_pages(bool available)
+{
+  auto ma = L4Re::Env::env()->mem_alloc();
+  if (!ma.is_valid())
+    {
+      errno = ENODEV;
+      return -1;
+    }
+
+  L4Re::Mem_alloc::Stats stats;
+  long err = ma->info(stats);
+  if (err < 0)
+    {
+      errno = -err;
+      return -1;
+    }
+
+  l4_size_t const bytes = available ? stats.mem_free : stats.mem_limit;
+  return bytes / L4_PAGESIZE;
+}
+
 } // namespace
 
 /*
@@ -71,6 +94,10 @@ long sysconf(int name)
     return num_online_cpus();
   case _SC_PAGE_SIZE:
     return L4_PAGESIZE;
+  case _SC_PHYS_PAGES:
+    return phys_pages(false);
+  case _SC_AVPHYS_PAGES:
+    return phys_pages(true);
   case _SC_CLK_TCK:
     return 1000;
   case _SC_MONOTONIC_CLOCK:
