@@ -74,9 +74,6 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       static_assert(is_same_v<_Key, typename _KeyContainer::value_type>);
       static_assert(is_same_v<_Tp, typename _MappedContainer::value_type>);
 
-      static_assert(is_nothrow_swappable_v<_KeyContainer>);
-      static_assert(is_nothrow_swappable_v<_MappedContainer>);
-
       using _Derived = __conditional_t<_Multi,
 				       flat_multimap<_Key, _Tp, _Compare,
 						     _KeyContainer, _MappedContainer>,
@@ -395,6 +392,38 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	: _Flat_map_impl(__s, __il.begin(), __il.end(), __comp, __a)
 	{ }
 
+      _Flat_map_impl(const _Flat_map_impl&) = default;
+      _Flat_map_impl& operator=(const _Flat_map_impl&) = default;
+
+      _GLIBCXX26_CONSTEXPR
+      _Flat_map_impl(_Flat_map_impl&& __other)
+      noexcept(is_nothrow_move_constructible_v<containers>
+	       && is_nothrow_move_constructible_v<key_compare>)
+#if __cpp_exceptions
+      try
+#endif
+      : _M_cont(std::move(__other._M_cont)), _M_comp(std::move(__other._M_comp))
+      { __other.clear(); }
+#if __cpp_exceptions
+      catch (...)
+      { __other.clear(); }
+#endif
+
+      _GLIBCXX26_CONSTEXPR
+      _Flat_map_impl&
+      operator=(_Flat_map_impl&& __other)
+      noexcept(is_nothrow_move_assignable_v<containers>
+	       && is_nothrow_move_assignable_v<key_compare>)
+      {
+	auto __guard = _M_make_clear_guard();
+	auto __guard_other = _ClearGuard{__other._M_cont};
+	_M_cont = std::move(__other._M_cont);
+	_M_comp = std::move(__other._M_comp);
+	__guard._M_disable();
+	// __guard_other._M_disable is deliberately not called.
+	return *this;
+      }
+
       _GLIBCXX26_CONSTEXPR
       _Derived&
       operator=(initializer_list<value_type> __il)
@@ -534,7 +563,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	      return {iterator{this, __key_it}, false};
 
 	  auto __guard = _M_make_clear_guard();
-	  __key_it = _M_cont.keys.insert(__key_it, std::move(__k));
+	  __key_it = _M_cont.keys.insert(__key_it, std::forward<_Key2>(__k));
 	  __value_it = _M_cont.values.begin() + (__key_it - _M_cont.keys.begin());
 	  _M_cont.values.emplace(__value_it, std::forward<_Args>(__args)...);
 	  __guard._M_disable();
@@ -602,13 +631,8 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
       template<typename _Iter, typename _Sent>
 	_GLIBCXX26_CONSTEXPR
 	void
-	_M_insert(_Iter __first, _Sent __last)
+	_M_insert(_Iter __first, _Sent __last, bool __is_sorted = false)
 	{
-	  // FIXME: This implementation fails its complexity requirements.
-	  // We can't idiomatically implement an efficient version (as in the
-	  // disabled code) until ranges::inplace_merge is fixed to dispatch
-	  // on iterator concept instead of iterator category.
-#if 0
 	  auto __guard = _M_make_clear_guard();
 	  auto __n = size();
 	  for (; __first != __last; ++__first)
@@ -618,22 +642,16 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	      _M_cont.values.emplace_back(std::move(__value.second));
 	    }
 	  auto __zv = views::zip(_M_cont.keys, _M_cont.values);
-	  ranges::sort(__zv.begin() + __n, __zv.end(), value_comp());
-	  ranges::inplace_merge(__zv.begin(), __zv.begin() + __n, __zv.end(), value_comp());
+	  if (__is_sorted)
+	    _GLIBCXX_DEBUG_ASSERT(ranges::is_sorted(__zv.begin() + __n, __zv.end(),
+						    value_comp()));
+	  else
+	    ranges::sort(__zv.begin() + __n, __zv.end(), value_comp());
+	  ranges::inplace_merge(__zv.begin(), __zv.begin() + __n, __zv.end(),
+				value_comp());
 	  if constexpr (!_Multi)
 	    _M_unique();
-	  __guard._M_cont = nullptr;
-#else
-	  auto __guard = _M_make_clear_guard();
-	  for (; __first != __last; ++__first)
-	    {
-	      value_type __value = *__first;
-	      _M_cont.keys.emplace_back(std::move(__value.first));
-	      _M_cont.values.emplace_back(std::move(__value.second));
-	    }
-	  _M_sort_uniq();
 	  __guard._M_disable();
-#endif
 	}
 
     public:
@@ -647,16 +665,19 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	_GLIBCXX26_CONSTEXPR
 	void
 	insert(__sorted_t, _InputIterator __first, _InputIterator __last)
-	{
-	  // FIXME: This implementation fails its complexity requirements; see above.
-	  insert(std::move(__first), std::move(__last));
-	}
+	{ _M_insert(std::move(__first), std::move(__last), true); }
 
       template<__detail::__container_compatible_range<value_type> _Rg>
 	_GLIBCXX26_CONSTEXPR
 	void
 	insert_range(_Rg&& __rg)
 	{ _M_insert(ranges::begin(__rg), ranges::end(__rg)); }
+
+      template<__detail::__container_compatible_range<value_type> _Rg>
+	_GLIBCXX26_CONSTEXPR
+	void
+	insert_range(__sorted_t, _Rg&& __rg)
+	{ _M_insert(ranges::begin(__rg), ranges::end(__rg), true); }
 
       _GLIBCXX26_CONSTEXPR
       void
@@ -742,11 +763,18 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
       _GLIBCXX26_CONSTEXPR
       void
-      swap(_Derived& __y) noexcept
+      swap(_Derived& __y)
+      noexcept(is_nothrow_swappable_v<key_container_type>
+	       && is_nothrow_swappable_v<mapped_container_type>
+	       && is_nothrow_swappable_v<key_compare>)
       {
-	ranges::swap(_M_comp, __y._M_comp);
+	auto __guard = _M_make_clear_guard();
+	auto __guard_y = _ClearGuard{__y._M_cont};
 	ranges::swap(_M_cont.keys, __y._M_cont.keys);
 	ranges::swap(_M_cont.values, __y._M_cont.values);
+	ranges::swap(_M_comp, __y._M_comp);
+	__guard._M_disable();
+	__guard_y._M_disable();
       }
 
       _GLIBCXX26_CONSTEXPR
@@ -988,7 +1016,7 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 	}
 
       friend _GLIBCXX26_CONSTEXPR void
-      swap(_Derived& __x, _Derived& __y) noexcept
+      swap(_Derived& __x, _Derived& __y) noexcept(noexcept(__x.swap(__y)))
       { return __x.swap(__y); }
 
       template<typename _Predicate>
@@ -1246,6 +1274,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
       // constructors
       using _Impl::_Impl;
+
+      // operator=(initializer_list<value_type>)
+      // Although this also brings in the base move/copy assignment operators,
+      // they will be hidden by our synthesized ones.
+      using _Impl::operator=;
 
       // iterators
       using _Impl::begin;
@@ -1599,6 +1632,11 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
 
       // constructors
       using _Impl::_Impl;
+
+      // operator=(initializer_list<value_type>)
+      // Although this also brings in the base move/copy assignment operators,
+      // they will be hidden by our synthesized ones.
+      using _Impl::operator=;
 
       // iterators
       using _Impl::begin;

@@ -3358,7 +3358,7 @@ namespace __format
 		__cd._M_zone_abbrev = *__zt._M_abbrev;
 	      else
 		{
-		  // TODO: use resize_for_override
+		  // TODO: use resize_and_overwrite
 		  __zone_store.resize(__zt._M_abbrev->size());
 		  auto& __ct = use_facet<ctype<_CharT>>(_M_f._M_locale(__fc));
 		  __ct.widen(__zt._M_abbrev->data(),
@@ -5234,8 +5234,12 @@ namespace __detail
 		      else
 			{
 			  // Read hh
-			  __hh = 10 * _S_try_read_digit(__is, __err);
-			  __hh += _S_try_read_digit(__is, __err);
+			  auto __d1 = _S_try_read_digit(__is, __err);
+			  auto __d2 = _S_try_read_digit(__is, __err);
+			  if (__d1 >= 0 && __d2 >= 0) [[likely]]
+			    __hh = 10 * __d1 + __d2;
+			  else
+			    __err |= ios_base::failbit;
 			}
 
 		      if (__is_failed(__err))
@@ -5269,8 +5273,12 @@ namespace __detail
 		      int_least32_t __mm = 0;
 		      if (__read_mm)
 			{
-			  __mm = 10 * _S_try_read_digit(__is, __err);
-			  __mm += _S_try_read_digit(__is, __err);
+			  auto __d1 = _S_try_read_digit(__is, __err);
+			  auto __d2 = _S_try_read_digit(__is, __err);
+			  if (__d1 >= 0 && __d2 >= 0) [[likely]]
+			    __mm = 10 * __d1 + __d2;
+			  else
+			    __err |= ios_base::failbit;
 			}
 
 		      if (!__is_failed(__err))
