@@ -15,6 +15,7 @@
 
 #include <pthread-l4.h>
 #include <errno.h>
+#include <string.h>
 #include "spinlock.h"
 
 #include "l4.h"
@@ -240,6 +241,8 @@ pthread_getaffinity_np(pthread_t th, size_t cpusetsize, cpu_set_t *cpuset) __THR
   }
   cpuset->__bits[0] = handle_to_descr(handle)->p_affinity_mask[0];
   __pthread_unlock(handle_to_lock(handle));
+  memset(reinterpret_cast<char *>(cpuset) + sizeof(cpuset->__bits[0]),
+         0, cpusetsize - sizeof(cpuset->__bits[0]));
 
   return 0;
 }
