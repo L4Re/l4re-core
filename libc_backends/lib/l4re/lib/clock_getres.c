@@ -8,9 +8,14 @@
 #include <errno.h>
 #include <time.h>
 
+#include "clocks.h"
+
+typedef int Get_clock(struct timespec *);
+extern Get_clock *__libc_l4_gettime[];
+
 int clock_getres(clockid_t clock_id, struct timespec * res)
 {
-  if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
+  if (clock_id < 0 || clock_id >= NCLOCKS || __libc_l4_gettime[clock_id] == NULL)
     {
       errno = EINVAL;
       return -1;

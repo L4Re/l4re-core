@@ -25,14 +25,15 @@ static int rt_clock_settime(const struct timespec *tp)
   return 0;
 }
 
-Get_clock *__libc_l4_settime[4] =
+/* Only the realtime clock can be set; the monotonic ones are what they are. */
+Get_clock *__libc_l4_settime[NCLOCKS] =
 {
   [CLOCK_REALTIME]  = rt_clock_settime,
 };
 
 int clock_settime(clockid_t clk_id, const struct timespec *tp)
 {
-  if (clk_id >= NCLOCKS || !__libc_l4_settime[clk_id])
+  if (clk_id < 0 || clk_id >= NCLOCKS || !__libc_l4_settime[clk_id])
     {
       errno = ENODEV;
       return -1;

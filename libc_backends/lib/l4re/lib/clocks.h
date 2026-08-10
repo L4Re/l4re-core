@@ -5,4 +5,4 @@
  */
 #pragma once
 
-enum { NCLOCKS = 4 };
+enum { NCLOCKS = 7 };

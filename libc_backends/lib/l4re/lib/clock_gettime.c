@@ -42,15 +42,18 @@ static int mono_clock_gettime(struct timespec *tp)
   return 0;
 }
 
-Get_clock *__libc_l4_gettime[4] =
+Get_clock *__libc_l4_gettime[NCLOCKS] =
 {
-  [CLOCK_REALTIME]  = libc_backend_rt_clock_gettime,
-  [CLOCK_MONOTONIC] = mono_clock_gettime
+  [CLOCK_REALTIME]         = libc_backend_rt_clock_gettime,
+  [CLOCK_REALTIME_COARSE]  = libc_backend_rt_clock_gettime,
+  [CLOCK_MONOTONIC]        = mono_clock_gettime,
+  [CLOCK_MONOTONIC_RAW]    = mono_clock_gettime,
+  [CLOCK_MONOTONIC_COARSE] = mono_clock_gettime,
 };
 
 int clock_gettime(clockid_t clk_id, struct timespec *tp)
 {
-  if (clk_id >= NCLOCKS || !__libc_l4_gettime[clk_id])
+  if (clk_id < 0 || clk_id >= NCLOCKS || __libc_l4_gettime[clk_id] == NULL)
     {
       errno = ENODEV;
       return -1;

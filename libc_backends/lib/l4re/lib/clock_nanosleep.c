@@ -16,8 +16,19 @@ int clock_nanosleep(clockid_t clock_id, int flags,
                     const struct timespec *ts,
                     struct timespec *rem)
 {
-  if (clock_id != CLOCK_REALTIME && clock_id != CLOCK_MONOTONIC)
-    return ENOTSUP;
+  int realtime = clock_id == CLOCK_REALTIME || clock_id == CLOCK_REALTIME_COARSE;
+
+  switch (clock_id)
+    {
+    case CLOCK_REALTIME:
+    case CLOCK_REALTIME_COARSE:
+    case CLOCK_MONOTONIC:
+    case CLOCK_MONOTONIC_RAW:
+    case CLOCK_MONOTONIC_COARSE:
+      break;
+    default:
+      return ENOTSUP;
+    }
 
   if (rem)
     {
@@ -28,7 +39,7 @@ int clock_nanosleep(clockid_t clock_id, int flags,
   l4_kernel_clock_t abs_time_us = ts->tv_sec * 1000000 + ts->tv_nsec / 1000;
   if (flags == TIMER_ABSTIME)
     {
-      if (clock_id == CLOCK_REALTIME)
+      if (realtime)
         abs_time_us -= __libc_l4_rt_clock_offset;
     }
   else
