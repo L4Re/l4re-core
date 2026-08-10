@@ -98,6 +98,8 @@ long sysconf(int name)
     return phys_pages(false);
   case _SC_AVPHYS_PAGES:
     return phys_pages(true);
+  case _SC_ARG_MAX:
+    return 4096;
   case _SC_CLK_TCK:
     return 1000;
   case _SC_MONOTONIC_CLOCK:
