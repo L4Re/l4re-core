@@ -82,6 +82,6 @@ long sysconf(int name)
   default:
     break;
   }
-  printf("%s: unknown command, name=%d\n", __func__, name);
+  fprintf(stderr, "%s: unknown command, name=%d\n", __func__, name);
   return 0;
 }
