@@ -11,27 +11,11 @@
 #include <sched.h>
 #include <unistd.h>
 
-#include <l4/re/env.h>
+#include <l4/re/env>
 #include <l4/sys/consts.h>
-#include <l4/sys/scheduler.h>
+#include <l4/sys/scheduler>
 
-/*
- * Backend of CPU_COUNT() and CPU_COUNT_S(): the number of CPUs set in the
- * given mask. This says nothing about how many CPUs the system has.
- */
-int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
-{
-  size_t const words = __setsize / sizeof(__setp->__bits[0]);
-
-  if (__setp == NULL)
-    return 0;
-
-  int count = 0;
-  for (size_t w = 0; w < words; ++w)
-    count += __builtin_popcountg(__setp->__bits[w]);
-
-  return count;
-}
+namespace {
 
 /* Number of CPUs our scheduler offers us. */
 static long num_online_cpus(void)
@@ -56,6 +40,26 @@ static long num_online_cpus(void)
 
   /* We are running somewhere, so never claim there is no CPU at all. */
   return count > 0 ? count : 1;
+}
+
+} // namespace
+
+/*
+ * Backend of CPU_COUNT() and CPU_COUNT_S(): the number of CPUs set in the
+ * given mask. This says nothing about how many CPUs the system has.
+ */
+int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
+{
+  size_t const words = __setsize / sizeof(__setp->__bits[0]);
+
+  if (__setp == nullptr)
+    return 0;
+
+  int count = 0;
+  for (size_t w = 0; w < words; ++w)
+    count += __builtin_popcountg(__setp->__bits[w]);
+
+  return count;
 }
 
 long sysconf(int name)

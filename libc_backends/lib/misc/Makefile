@@ -25,7 +25,6 @@ SRC_C       = daemon.c \
               shadow.c \
               shm.c \
               spawn.c \
-              sysconf.c \
               system.c \
               termios.c \
               timer.c \
@@ -39,7 +38,11 @@ SRC_C       = daemon.c \
 
 SRC_C-$(CONFIG_L4_LIBC_UCLIBC) += lockf.c
 
+SRC_CC      = sysconf.cc
+
 include $(L4DIR)/mk/lib.mk
 
 CPPFLAGS-$(CONFIG_L4_LIBC_UCLIBC) += -DNOT_IN_libc -include libc-symbols.h
 CPPFLAGS-$(CONFIG_L4_LIBC_MUSL)   += -D_GNU_SOURCE
+
+CXXFLAGS   += -fno-rtti -fno-exceptions
