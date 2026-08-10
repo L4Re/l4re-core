@@ -411,9 +411,9 @@ static unsigned long parse_flags(cxx::String const &_args, Dbg_bits const *dbb,
 
       if (!b->tag)
         {
-          warn.printf("ignore unknown argument for %.*s: '%.*s'\n",
-                      opt.len(), opt.start(), a.len(), a.start());
-
+          Err(Err::Fatal).printf("Unknown argument for %.*s: '%.*s'\n",
+                                 opt.len(), opt.start(), a.len(), a.start());
+          exit(1);
         }
     }
   return lvl;
@@ -474,7 +474,9 @@ parse_long_option(cxx::String const &o)
         }
     }
 
-  warn.printf("unknown command-line option '%.*s'\n", o.len(), o.start());
+  Err(Err::Fatal).printf("Unknown command-line option '%.*s'\n",
+                         o.len(), o.start());
+  exit(1);
 }
 
 static void
@@ -482,8 +484,9 @@ parse_option(cxx::String const &o)
 {
   if (o.len() < 2)
     {
-      warn.printf("empty command-line option '%.*s'\n", o.len(), o.start());
-      return;
+      Err(Err::Fatal).printf("Empty command-line option '%.*s'\n",
+                             o.len(), o.start());
+      exit(1);
     }
 
   if (o[1] == '-')
@@ -497,8 +500,8 @@ parse_option(cxx::String const &o)
       switch (o[s])
         {
         default:
-          warn.printf("unknown command-line option '%c'\n", o[s]);
-          break;
+          Err(Err::Fatal).printf("Unknown command-line option '%c'\n", o[s]);
+          exit(1);
         }
     }
 }
