@@ -43,7 +43,7 @@ INSTALL_TARGET	= $(LD_SCRIPTS) crti.o crtn.o crt1.o crti.s.o crtn.s.o crt1.s.o c
 DEFINES_crt1.s.o += -fPIE
 DEFINES_crt1.p.o += -fPIE
 
-REQUIRES_LIBS_all_lib :=
+REQUIRES_LIBS_all_lib := $(if $(BID_COMPILER_IS_CLANG),,libgcc-headers)
 
 DEPS += $(foreach file,crti_s.o kip_addr.o, $(call BID_dot_fname,$(file)).cmd)
 
