@@ -11,21 +11,60 @@
 #include <sched.h>
 #include <unistd.h>
 
+#include <l4/re/env.h>
 #include <l4/sys/consts.h>
+#include <l4/sys/scheduler.h>
 
+/*
+ * Backend of CPU_COUNT() and CPU_COUNT_S(): the number of CPUs set in the
+ * given mask. This says nothing about how many CPUs the system has.
+ */
 int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
 {
-  (void)__setsize;
-  (void)__setp;
-  return 4; // just some number
+  size_t const words = __setsize / sizeof(__setp->__bits[0]);
+
+  if (__setp == NULL)
+    return 0;
+
+  int count = 0;
+  for (size_t w = 0; w < words; ++w)
+    count += __builtin_popcountg(__setp->__bits[w]);
+
+  return count;
+}
+
+/* Number of CPUs our scheduler offers us. */
+static long num_online_cpus(void)
+{
+  size_t const bits_per_word = sizeof(l4_umword_t) * 8;
+  l4_umword_t cpu_max = 0;
+  long count = 0;
+  unsigned offset = 0;
+
+  do
+    {
+      l4_sched_cpu_set_t cs = l4_sched_cpu_set(offset, 0, 0);
+
+      if (l4_error(l4_scheduler_info(l4re_env()->scheduler, &cpu_max, &cs)) < 0)
+        break;
+
+      count += __builtin_popcountg(cs.map);
+
+      offset += bits_per_word;
+    }
+  while (offset < cpu_max);
+
+  /* We are running somewhere, so never claim there is no CPU at all. */
+  return count > 0 ? count : 1;
 }
 
 long sysconf(int name)
 {
   switch (name)
   {
+  case _SC_NPROCESSORS_CONF:
   case _SC_NPROCESSORS_ONLN:
-    return __sched_cpucount(0, NULL);
+    return num_online_cpus();
   case _SC_PAGE_SIZE:
     return L4_PAGESIZE;
   case _SC_CLK_TCK:
