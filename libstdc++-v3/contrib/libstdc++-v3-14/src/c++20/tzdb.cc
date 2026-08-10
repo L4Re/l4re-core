@@ -35,7 +35,11 @@
 #include <atomic>     // atomic<T*>, atomic<int>
 #include <memory>     // atomic<shared_ptr<T>>
 #include <mutex>      // mutex
-#include <filesystem> // filesystem::read_symlink
+#include <iomanip>    // quoted
+
+#if defined(_GLIBCXX_HAVE_READLINK) && defined(_GLIBCXX_HAVE_UNISTD_H)
+# include <unistd.h>  // readlink
+#endif
 
 #ifdef _AIX
 # include <cstdlib>   // getenv
@@ -181,7 +185,7 @@ namespace std::chrono
 
 #include "tzdb_globals.h"
 
-  // The data structures defined in this file (Rule, on_day, at_time etc.)
+  // The data structures defined in this file (Rule, on_month_day, at_time etc.)
   // are used to represent the information parsed from the tzdata.zi file
   // described at https://man7.org/linux/man-pages/man8/zic.8.html#FILES
 
@@ -243,11 +247,14 @@ namespace std::chrono
       // If not, indic is unchanged. Callers should set a default first.
       friend istream& operator>>(istream& in, Indicator& indic)
       {
-	auto [val, yes] = at_time::is_indicator(in.peek());
-	if (yes)
+	if (!in.eof())
 	  {
-	    in.ignore(1);
-	    indic = val;
+	    auto [val, yes] = at_time::is_indicator(in.peek());
+	    if (yes)
+	      {
+		in.ignore(1);
+		indic = val;
+	      }
 	  }
 	return in;
       }
@@ -267,7 +274,7 @@ namespace std::chrono
     };
 
     // The IN and ON fields of a RULE record, e.g. "March lastSunday".
-    struct on_day
+    struct on_month_day
     {
       using rep = uint_least16_t;
       // Equivalent to Kind, chrono::month, chrono::day, chrono::weekday,
@@ -331,7 +338,8 @@ namespace std::chrono
 	return ymd;
       }
 
-      friend istream& operator>>(istream&, on_day&);
+
+      friend istream& operator>>(istream&, on_month_day&);
     };
 
     // Wrapper for two chrono::year values, which reads the FROM and TO
@@ -442,12 +450,13 @@ namespace std::chrono
 
       ZoneInfo(sys_info&& info)
       : m_buf(std::move(info.abbrev)), m_expanded(true), m_save(info.save),
-	m_offset(info.offset), m_until(info.end)
+	m_offset(info.offset - seconds(info.save)), m_until(info.end)
       { }
 
       ZoneInfo(const pair<sys_info, string_view>& info)
-      : m_expanded(true), m_save(info.first.save), m_offset(info.first.offset),
-	m_until(info.first.end)
+      : m_expanded(true), m_save(info.first.save),
+	m_offset(info.first.offset - seconds(info.first.save)),
+       	m_until(info.first.end)
       {
 	if (info.second.size())
 	  {
@@ -458,7 +467,7 @@ namespace std::chrono
 	m_buf += info.first.abbrev;
       }
 
-      // STDOFF: Seconds from UTC during standard time.
+      // STDOFF: Seconds from UTC during standard time (without any save).
       seconds
       offset() const noexcept { return m_offset; }
 
@@ -503,7 +512,7 @@ namespace std::chrono
 	  return false;
 
 	info.end = until();
-	info.offset = offset();
+	info.offset = offset() + seconds(m_save);
 	info.save = minutes(m_save);
 	info.abbrev = format();
 	format_abbrev_str(info); // expand %z
@@ -553,9 +562,9 @@ namespace std::chrono
     // A RULE record from the tzdata.zi timezone info file.
     struct Rule
     {
-      // This allows on_day to reuse padding of at_time.
+      // This allows on_month_day to reuse padding of at_time.
       // This keeps the size to 8 bytes and the alignment to 4 bytes.
-      struct datetime : at_time { on_day day; };
+      struct datetime : at_time { on_month_day day; };
 
       // TODO combining name+letters into a single string (like in ZoneInfo)
       // would save sizeof(string) and make Rule fit in a single cacheline.
@@ -617,17 +626,17 @@ namespace std::chrono
 	    << ' ' << r.when.day.get_month() << ' ';
 	switch (r.when.day.kind)
 	{
-	case on_day::DayOfMonth:
+	case on_month_day::DayOfMonth:
 	  out << (unsigned)r.when.day.get_day();
 	  break;
-	case on_day::LastWeekday:
+	case on_month_day::LastWeekday:
 	  out << "last" << weekday(r.when.day.day_of_week);
 	  break;
-	case on_day::LessEq:
+	case on_month_day::LessEq:
 	  out << weekday(r.when.day.day_of_week) << " <= "
 	    << r.when.day.day_of_month;
 	  break;
-	case on_day::GreaterEq:
+	case on_month_day::GreaterEq:
 	  out << weekday(r.when.day.day_of_week) << " >= "
 	    << r.when.day.day_of_month;
 	  break;
@@ -888,7 +897,11 @@ namespace std::chrono
 	  }
 
 	if (active_rule)
-	  letters = active_rule->letters;
+	  {
+	    info.offset = ri.offset() + active_rule->save;
+	    info.save = chrono::duration_cast<minutes>(active_rule->save);
+	    letters = active_rule->letters;
+	  }
 	else if (first_std)
 	  letters = first_std->letters;
       }
@@ -976,10 +989,10 @@ namespace std::chrono
 	  result_index = new_infos.size() - 1;
 	else if (result_index >= 0 && !merged)
 	  {
-	    // Finish on a DST sys_info if possible, so that if we resume
+	    // Finish before a STD sys_info if possible, so that if we resume
 	    // generating sys_info objects after this time point, save=0
 	    // should be correct for the next sys_info.
-	    if (num_after > 1 || info.save != 0min)
+	    if (num_after > 1 || !next_rule || next_rule->save == 0s)
 	      --num_after;
 	  }
 
@@ -1188,8 +1201,8 @@ namespace std::chrono
   pair<vector<leap_second>, bool>
   tzdb_list::_Node::_S_read_leap_seconds()
   {
-    // This list is valid until at least 2025-12-28 00:00:00 UTC.
-    auto expires = sys_days{2025y/12/28};
+    // This list is valid until at least 2026-12-28 00:00:00 UTC.
+    constexpr auto expires = sys_days{2026y/12/28};
     vector<leap_second> leaps
     {
       (leap_second)  78796800, // 1 Jul 1972
@@ -1734,28 +1747,87 @@ namespace std::chrono
   tzdb::current_zone() const
   {
     // TODO cache this function's result?
+    // Could check the modification time of /etc/localtime, and not re-read
+    // it if it hasn't changed. reload_tzdb() could clear the cache too,
+    // to have a way to force a re-read.
 
 #ifndef _AIX
-    // Repeat the preprocessor condition used by filesystem::read_symlink,
-    // to avoid a dependency on src/c++17/fs_ops.o if it won't work anyway.
-#if defined(_GLIBCXX_HAVE_READLINK) && defined(_GLIBCXX_HAVE_SYS_STAT_H)
-    error_code ec;
-    // This should be a symlink to e.g. /usr/share/zoneinfo/Europe/London
-    auto path = filesystem::read_symlink("/etc/localtime", ec);
-    if (!ec)
+#if defined(_GLIBCXX_HAVE_READLINK) && defined(_GLIBCXX_HAVE_UNISTD_H)
+    string_view str;
+    char buf[128]; // strlen("../usr/share/zoneinfo/...") is usually < 55
+    string dynbuf;
+    // /etc/localtime should be a symlink that ends with a zone name,
+    // e.g. /etc/localtime -> /usr/share/zoneinfo/Europe/London
+    // https://www.freedesktop.org/software/systemd/man/latest/localtime.html
+    // This should work on GNU/Linux, macOS, NetBSD, and OpenBSD.
+    // Some FreeBSD systems also use a symlink for /etc/localtime.
+    // Use readlink directly to avoid std::filesystem overhead.
+    if (auto n = ::readlink("/etc/localtime", buf, sizeof(buf)); n > 0)
       {
-	auto first = path.begin(), last = path.end();
-	if (std::distance(first, last) > 2)
+	if (static_cast<size_t>(n) < sizeof(buf))
+	  str = string_view(buf, n);
+	else [[unlikely]]
 	  {
-	    --last;
-	    string name = last->string();
-	    if (auto tz = do_locate_zone(this->zones, this->links, name))
-	      return tz;
-	    --last;
-	    name = last->string() + '/' + name;
-	    if (auto tz = do_locate_zone(this->zones, this->links, name))
-	      return tz;
+	    // We read the symlink but it didn't fit in buf[], use dynbuf.
+	    do
+	      {
+		n *= 2;
+		dynbuf.__resize_and_overwrite(n, [](char* p, size_t len) {
+		  auto n2 = ::readlink("/etc/localtime", p, len);
+		  if (n2 == -1) // symlink removed or replaced by file?!
+		    __throw_runtime_error("tzdb: error reading /etc/localtime");
+		  const size_t r = n2;
+		  return r < len ? r : 0;
+		});
+	      }
+	    while (dynbuf.empty());
+	    str = dynbuf;
 	  }
+      }
+
+    if (!str.empty())
+      {
+	// Remove any redundant slashes so we can match zone names.
+	// e.g. /usr/share/zoneinfo/Europe//London is a valid symlink,
+	// but won't match against "Europe/London".
+	if (auto pos = str.rfind("//"); pos != str.npos) [[unlikely]]
+	  {
+	    if (str.data() != dynbuf.data())
+	      dynbuf = str;
+	    string::size_type spos = pos;
+	    do
+	      {
+		dynbuf.erase(spos, 1);
+		spos = dynbuf.rfind("//", spos);
+	      }
+	    while (spos != dynbuf.npos);
+	    str = dynbuf;
+	  }
+
+	// Check the trailing components of the path against known zone names.
+	// Valid IANA times zones can have one, two, or three parts, e.g.
+	// "UTC", "Europe/London", and "America/Indiana/Indianapolis".
+	// Custom tzdata.zi files could in theory use four or more parts.
+
+	auto pos = str.rfind('/');
+	while (pos != str.npos && pos != 0)
+	  {
+	    if (auto tz = do_locate_zone(this->zones, this->links,
+					 str.substr(pos + 1)))
+	      return tz;
+	    pos = str.rfind('/', pos - 1);
+	  }
+	// If we didn't match yet, try once more so that we will match
+	// a symlink to a relative path such as "Europe/London"
+	// or symlink to an absolute path such as "/Europe/London".
+	// Both cases seem unlikely because it would require either
+	// /etc/Europe or /Europe to be a directory (or a symlink to one)
+	// containing the TZif files, but it's theoretically possible.
+	// If pos==npos then pos+1 wraps to 0 and we use the whole string.
+	// If pos==0 then substr(1) discards the leading slash.
+	if (auto tz = do_locate_zone(this->zones, this->links,
+				     str.substr(pos + 1)))
+	  return tz;
       }
 #endif
     // Otherwise, look for a file naming the time zone.
@@ -1792,7 +1864,12 @@ namespace std::chrono
 		  return tz;
 	      }
       }
-#else
+
+    // FIXME: For DragonFly BSD /etc/localtime is a copy of one of the
+    // zone files in /usr/share/zoneinfo so we need to compare its contents
+    // to each one until we find a match.
+
+#else // _AIX
     // AIX stores current zone in $TZ in /etc/environment but the value
     // is typically a POSIX time zone name, not IANA zone.
     // https://developer.ibm.com/articles/au-aix-posix/
@@ -1971,55 +2048,49 @@ namespace std::chrono
       }
     };
 
-    istream& operator>>(istream& in, on_day& to)
+    // Read the MONTH DAY. Three forms are accepted for DAY:
+    // * a plain day-of-month number (DayOfMonth),
+    // * "lastWww" where Www is a weekday name (LastWeekday),
+    // * "Www<=N" or "Www>=N" (LessEq / GreaterEq).
+    // On failure to read either MONTH or DAY this function sets
+    // failbit. If DAY is not parsed, only `on.month` is modified,
+    // otherwise `on` is left unchanged.
+    istream& operator>>(istream& in, on_month_day& on)
     {
-      on_day on{};
-      abbrev_month m{};
-      in >> m;
-      on.month = static_cast<unsigned>(m.m);
-      int c = ws(in).peek();
-      if ('0' <= c && c <= '9')
+      using enum on_month_day::Kind;
+      if (abbrev_month m{}; in >> m)
 	{
-	  on.kind = on_day::DayOfMonth;
-	  unsigned d;
-	  in >> d;
-	  if (d <= 31) [[likely]]
+ 	  on.month = static_cast<unsigned>(m.m);
+	  if (int c = ws(in).peek(); '0' <= c && c <= '9')
 	    {
-	      on.day_of_month = d;
-	      to = on;
-	      return in;
-	    }
-	}
-      else if (c == 'l') // lastSunday, lastWed, ...
-	{
-	  in.ignore(4);
-	  if (abbrev_weekday w{}; in >> w) [[likely]]
-	    {
-	      on.kind = on_day::LastWeekday;
-	      on.day_of_week = w.wd.c_encoding();
-	      to = on;
-	      return in;
-	    }
-	}
-      else
-	{
-	  abbrev_weekday w;
-	  in >> w;
-	  if (auto c = in.get(); c == '<' || c == '>')
-	    {
-	      if (in.get() == '=')
+	      if (unsigned d; (in >> d) && (d <= 31)) [[likely]]
 		{
-		  on.kind = c == '<' ? on_day::LessEq : on_day::GreaterEq;
+		  on.kind = DayOfMonth;
+		  on.day_of_month = d;
+		  return in;
+		}
+	    }
+	  else if (c == 'l') // lastSunday, lastWed, ...
+	    {
+	      in.ignore(4);
+	      if (abbrev_weekday w{}; in >> w) [[likely]]
+		{
+		  on.kind = LastWeekday;
 		  on.day_of_week = w.wd.c_encoding();
-		  unsigned d;
-		  in >> d;
-		  if (d <= 31) [[likely]]
+		  return in;
+		}
+	    }
+	  else if (abbrev_weekday w; in >> w) [[likely]]
+	    {
+	      if (c = in.get(); c == '<' || c == '>')
+		if (in.get() == '=')
+	          if (unsigned d; (in >> d) && (d <= 31)) [[likely]]
 		    {
+		      on.kind = c == '<' ? LessEq : GreaterEq;
+		      on.day_of_week = w.wd.c_encoding();
 		      on.day_of_month = d;
-		      to = on;
 		      return in;
 		    }
-		}
 	    }
 	}
       in.setstate(ios::failbit);
@@ -2029,10 +2100,11 @@ namespace std::chrono
     istream& operator>>(istream& in, at_time& at)
     {
       int sign = 1;
-      if (in.peek() == '-')
+      if (ws(in).peek() == '-')
 	{
 	  in.ignore(1);
-	  if (auto [val, yes] = at_time::is_indicator(in.peek()); yes)
+	  if (auto [val, yes] = at_time::is_indicator(in.peek());
+	      in.eof() || yes)
 	    {
 	      in.ignore(1);
 	      at.time = 0s;
@@ -2051,11 +2123,11 @@ namespace std::chrono
 	  in.ignore(1); // discard the colon.
 	  in >> i;
 	  m = minutes{i};
-	  if (in.peek() == ':')
+	  if (!in.eof() && in.peek() == ':')
 	    {
 	      in.ignore(1); // discard the colon.
 	      in >> i;
-	      if (in.peek() == '.')
+	      if (!in.eof() && in.peek() == '.')
 		{
 		  double frac;
 		  in >> frac;
@@ -2127,16 +2199,23 @@ namespace std::chrono
       in.exceptions(ios::goodbit); // Don't throw ios::failure if YEAR absent.
       if (int y = int(year::max()); in >> y)
 	{
-	  abbrev_month m{January};
-	  int d = 1;
+	  on_month_day on{ .kind = on_month_day::DayOfMonth,
+			   .month = 1, .day_of_month = 1 };
 	  at_time t{};
-	  // XXX DAY should support ON format, e.g. lastSun or Sun>=8
-	  in >> m >> d >> t;
-	  // XXX UNTIL field should be interpreted
-	  // "using the rules in effect just before the transition"
-	  // so might need to store as year_month_day and hh_mm_ss and only
-	  // convert to a sys_time once we know the offset in effect.
-	  inf.m_until = sys_days(year(y)/m.m/day(d)) + seconds(t.time);
+	  in >> on >> t;
+	  year_month_day ymd = on.pin(year(y));
+	  inf.m_until = sys_days(ymd) + seconds(t.time);
+	  if (t.indicator != at_time::Universal)
+	    { // UNTIL uses "the rules in effect just before the transition"
+	      // adjust by STDOFF
+	      inf.m_until -= seconds(inf.m_offset);
+	      if (t.indicator != at_time::Standard)
+		{
+		  if (inf.m_expanded) // Not a named Rule, SAVE is known now.
+		    inf.m_until -= inf.m_save;
+		  // else Named Rule, SAVE is unknown. FIXME: PR 116110
+		}
+	    }
 	}
       else
 	inf.m_until = sys_days(year::max()/December/31);

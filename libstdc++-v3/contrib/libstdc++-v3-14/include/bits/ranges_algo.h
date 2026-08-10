@@ -990,7 +990,7 @@ namespace ranges
 	for (; __first != __last; ++__first)
 	  if (!std::__invoke(__pred, std::__invoke(__proj, *__first)))
 	    {
-	      *__result = std::move(*__first);
+	      *__result = ranges::iter_move(__first);
 	      ++__result;
 	    }
 
@@ -1144,7 +1144,7 @@ namespace ranges
 	  if (!std::__invoke(__comp,
 			     std::__invoke(__proj, *__dest),
 			     std::__invoke(__proj, *__first)))
-	    *++__dest = std::move(*__first);
+	    *++__dest = ranges::iter_move(__first);
 	return {++__dest, __first};
       }
 
