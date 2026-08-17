@@ -93,6 +93,9 @@ L4_BEGIN_DECLS
  * \param log2_size  Size of the receive window to receive KIP in.
  *
  * \return  Address KIP was mapped to, 0 indicates an error.
+ *
+ * \note On systems without MMU, the parameters `addr` and `log2_size` are
+ *       ignored.
  */
 L4_CV l4_kernel_info_t *
 l4sigma0_map_kip(l4_cap_idx_t sigma0, void *addr, unsigned log2_size);
