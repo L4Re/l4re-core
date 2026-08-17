@@ -1925,6 +1925,13 @@ void __dls3(size_t *sp, size_t *auxv)
 		size_t n = init_array_sz/sizeof(size_t);
 		size_t *fn = laddr(&ldso, init_array);
 		while (n--) ((void (*)(void))*fn++)();
+
+		// Replicate the work of do_init_fini(). Makes sure
+		// constructors never run again and destructors are exectued on
+		// a regular shutdown.
+		ldso.fini_next = fini_head;
+		fini_head = &ldso;
+		ldso.constructed = 1;
 	}
 #endif
 
