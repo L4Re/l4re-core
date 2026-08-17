@@ -110,6 +110,16 @@ public:
   virtual ~LLog() {}
 };
 
+template<typename T>
+static L4::Ipc::Cap<L4::Kobject>
+register_ipc_object(cxx::unique_ptr<T> object, char const *name)
+{
+  auto ko = object_pool.cap_alloc()->alloc(object.get(), name);
+  ko->dec_refcnt(1);
+  object.release();
+  return L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+}
+
 l4_ret_t
 Allocator::op_create(L4::Factory::Rights, L4::Ipc::Cap<void> &res,
                      long type, L4::Ipc::Varg_list<> &&args)
@@ -139,10 +149,7 @@ l4_ret_t
 Allocator::create_namespace(L4::Ipc::Cap<void> &res)
 {
   cxx::unique_ptr<Moe::Name_space> o(make_obj<Moe::Name_space>());
-  auto ko = object_pool.cap_alloc()->alloc(o.get(), "moe-ns");
-  ko->dec_refcnt(1);
-  o.release();
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+  res = register_ipc_object(cxx::move(o), "moe-ns");
   return L4_EOK;
 }
 
@@ -150,10 +157,7 @@ l4_ret_t
 Allocator::create_rm(L4::Ipc::Cap<void> &res)
 {
   cxx::unique_ptr<Region_map> o(make_obj<Region_map>());
-  auto ko = object_pool.cap_alloc()->alloc(o.get(), "moe-rm");
-  ko->dec_refcnt(1);
-  o.release();
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+  res = register_ipc_object(cxx::move(o), "moe-rm");
   return L4_EOK;
 }
 
@@ -171,10 +175,7 @@ Allocator::create_factory(L4::Ipc::Cap<void> &res, L4::Ipc::Varg_list<> &args)
                 "size_t must be able to hold the maximum of a long");
   cxx::unique_ptr<Allocator>
     o(make_obj<Allocator>(_qalloc.quota(), quota.value<long>()));
-  auto ko = object_pool.cap_alloc()->alloc(o.get(), "moe-fact");
-  ko->dec_refcnt(1);
-  o.release();
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+  res = register_ipc_object(cxx::move(o), "moe-fact");
 
   return L4_EOK;
 }
@@ -200,10 +201,7 @@ Allocator::create_log(L4::Ipc::Cap<void> &res, L4::Ipc::Varg_list<> &args)
 
   cxx::unique_ptr<Moe::Log> l(make_obj<LLog>(tag.value<char const *>(),
                                              tag.length() - 1, color));
-  auto ko = object_pool.cap_alloc()->alloc(l.get(), "moe-log");
-  ko->dec_refcnt(1);
-  l.release();
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+  res = register_ipc_object(cxx::move(l), "moe-log");
   return L4_EOK;
 }
 
@@ -243,10 +241,7 @@ Allocator::create_scheduler(L4::Ipc::Cap<void> &res, L4::Ipc::Varg_list<> &args)
   o->set_prio(p_base.value<l4_mword_t>(), p_max.value<l4_mword_t>());
   if (cpu_mask_offs)
     o->restrict_cpus(cpu_mask);
-  auto ko = object_pool.cap_alloc()->alloc(o.get(), "moe-sched");
-  ko->dec_refcnt(1);
-  o.release();
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
+  res = register_ipc_object(cxx::move(o), "moe-sched");
   return L4_EOK;
 }
 
@@ -295,11 +290,8 @@ Allocator::create_dataspace(L4::Ipc::Cap<void> &res, L4::Ipc::Varg_list<> &args)
         mem_cfg));
 
   // L4::cout << "MO=" << mo.get() << "\n";
-  auto ko = object_pool.cap_alloc()->alloc(mo.get(), "moe-ds");
-  ko->dec_refcnt(1);
+  res = register_ipc_object(cxx::move(mo), "moe-ds");
   // L4::cout << "MO_CAP=" << mo->obj_cap() << "\n";
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
-  mo.release();
   return L4_EOK;
 }
 
@@ -307,10 +299,7 @@ l4_ret_t
 Allocator::create_dma_space(L4::Ipc::Cap<void> &res)
 {
   cxx::unique_ptr<Moe::Dma_space> o(make_obj<Moe::Dma_space>());
-  auto ko = object_pool.cap_alloc()->alloc(o.get(), "moe-dma-space");
-  ko->dec_refcnt(1);
-  res = L4::Ipc::make_cap(ko, L4_CAP_FPAGE_RWSD);
-  o.release();
+  res = register_ipc_object(cxx::move(o), "moe-dma-space");
   return L4_EOK;
 }
 
