@@ -397,14 +397,14 @@ L4_INLINE
 l4_timeout_s l4_timeout_abs_u(l4_kernel_clock_t val, int pos,
                               l4_utcb_t *utcb) L4_NOTHROW
 {
-  union T
+  union l4_kclock_to_bufregs
   {
     l4_kernel_clock_t t;
     l4_umword_t m[sizeof(l4_kernel_clock_t)/sizeof(l4_umword_t)];
   };
   l4_timeout_s to;
   to.t = 0x8000 | pos;
-  ((union T*)(l4_utcb_br_u(utcb)->br + pos))->t = val;
+  ((union l4_kclock_to_bufregs *)(l4_utcb_br_u(utcb)->br + pos))->t = val;
   return to;
 }
 
