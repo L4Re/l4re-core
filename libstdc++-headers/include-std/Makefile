@@ -54,7 +54,7 @@ cpu_header = $(word 1,$(wildcard $(SRCDIR_X)/$(CPU_H_arch)/$(strip $(1)) $(SRCDI
 
 install_cpu_header = $(VERBOSE)$(if $(call cpu_header,$(1)),$(LN) -sf $(call cpu_header,$(1)) $(INSTALL_INCDIR_X)/bits/$(strip $(notdir $(1))))
 
-LIBSUPC_H += $(foreach V,$(STDCXX_AVAILABLE_VERSIONS),$(LIBSUPC_H-$(V)_PLUS-$(STDCXX_CONTRIB_VERSION_$(V)_PLUS)))
+LIBSUPC_H += $(foreach V,$(STDCXX_CONTRIB_VERSION_X_PLUS_LIST),$(LIBSUPC_H-$(V)_PLUS-y))
 
 LIBSUPC_HI = $(addprefix $(INSTALL_INCDIR_X)/, $(LIBSUPC_H))
 STDCXX_CSTD_HEADERS_ABS = $(addprefix $(INSTALL_INCDIR_X)/, $(STDCXX_CSTD_HEADERS))

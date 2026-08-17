@@ -23,8 +23,11 @@ else
   STDCXX_CONTRIB_VERSION := $(or $(filter $(GCCVERSION),$(STDCXX_AVAILABLE_VERSIONS)),\
                             $(call cmp,$(GCCVERSION),$(_max),$(_min),$(_max),$(_max)))
 endif
-# Just check if chosen version is 10 or higher
-STDCXX_CONTRIB_VERSION_10_PLUS  := $(call cmp, $(STDCXX_CONTRIB_VERSION),10,,y,y)
+
+# STDCXX_CONTRIB_VERSION_X_PLUS variables, which are "y" if selected stdcxx
+# version is X or higher
+STDCXX_CONTRIB_VERSION_X_PLUS_LIST := $(shell seq 1 $(STDCXX_CONTRIB_VERSION))
+$(foreach v,$(STDCXX_CONTRIB_VERSION_X_PLUS_LIST),$(eval STDCXX_CONTRIB_VERSION_$(v)_PLUS := y))
 
 STDCXX_CONTRIB_DIR = $(STDCXX_PKG_DIR)/contrib/libstdc++-v3-$(STDCXX_CONTRIB_VERSION)
 DEFINES += -Dlinux -D_GNU_SOURCE
