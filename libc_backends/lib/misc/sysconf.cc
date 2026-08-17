@@ -33,7 +33,9 @@ static long num_online_cpus(void)
       if (l4_error(l4_scheduler_info(l4re_env()->scheduler, &cpu_max, &cs)) < 0)
         break;
 
-      count += __builtin_popcountg(cs.map);
+      // Use popcountg to get rid of assert once we deprecated gcc-13 and older
+      static_assert(sizeof(cs.map) == sizeof(long));
+      count += __builtin_popcountl(cs.map);
 
       offset += bits_per_word;
     }
@@ -79,8 +81,11 @@ int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
     return 0;
 
   int count = 0;
+
+  // Use popcountg to get rid of assert once we deprecated gcc-13 and older
+  static_assert(sizeof(__setp->__bits[0]) == sizeof(long));
   for (size_t w = 0; w < words; ++w)
-    count += __builtin_popcountg(__setp->__bits[w]);
+    count += __builtin_popcountl(__setp->__bits[w]);
 
   return count;
 }
