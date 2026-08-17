@@ -12,8 +12,8 @@ LIBSUPC_H            := exception new typeinfo cxxabi.h \
                         bits/exception_defines.h bits/cxxabi_forced.h \
                         cxxabi_forced.h bits/hash_bytes.h \
                         bits/atomic_lockfree_defines.h \
-                        bits/exception.h bits/cxxabi_init_exception.h
-LIBSUPC_H-10_PLUS-y  += compare
+                        bits/exception.h bits/cxxabi_init_exception.h \
+                        compare
 
 ALLOCATOR_H        := config/allocator/new_allocator_base.h
 CLOCALE_H          := config/locale/generic/c_locale.h
