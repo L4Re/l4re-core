@@ -1905,20 +1905,24 @@ void __dls3(size_t *sp, size_t *auxv)
 	error = error_impl;
 
 #ifndef NOT_FOR_L4
+	// Setup L4Re::Env and KIP pointers and run libc global constructors.
+	// Makes sure our VFS is initialized so that open/mmap and friends are
+	// working.
+	//
 	// Must do this after initializing `libc.page_size`, since on architectures
 	// such as arm64, where musl provides no hardcoded PAGESIZE define, it is used
 	// in malloc to detect the page size.
 	size_t tmp;
-	int ret = search_vec(auxv, &tmp, 0xf1);
-	l4re_global_env = (void*)tmp;
+	if (search_vec(auxv, &tmp, AT_L4_ENV))
+		l4re_global_env = (void*)tmp;
 
 	size_t init_array, init_array_sz;
-	search_vec(ldso.dynv, &init_array, DT_INIT_ARRAY);
-	search_vec(ldso.dynv, &init_array_sz, DT_INIT_ARRAYSZ);
-
-	size_t n = init_array_sz/sizeof(size_t);
-	size_t *fn = laddr(&ldso, init_array);
-	while (n--) ((void (*)(void))*fn++)();
+	if (   search_vec(ldso.dynv, &init_array, DT_INIT_ARRAY)
+	    && search_vec(ldso.dynv, &init_array_sz, DT_INIT_ARRAYSZ)) {
+		size_t n = init_array_sz/sizeof(size_t);
+		size_t *fn = laddr(&ldso, init_array);
+		while (n--) ((void (*)(void))*fn++)();
+	}
 #endif
 
 	/* If the main program was already loaded by the kernel,
