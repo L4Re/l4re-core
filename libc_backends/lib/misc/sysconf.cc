@@ -74,6 +74,7 @@ phys_pages(bool available)
  * given mask. This says nothing about how many CPUs the system has.
  */
 int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
+noexcept(noexcept(__sched_cpucount(__setsize, __setp)))
 {
   size_t const words = __setsize / sizeof(__setp->__bits[0]);
 
@@ -91,6 +92,7 @@ int __sched_cpucount(size_t __setsize, const cpu_set_t *__setp)
 }
 
 long sysconf(int name)
+noexcept(noexcept(sysconf(name)))
 {
   switch (name)
   {
