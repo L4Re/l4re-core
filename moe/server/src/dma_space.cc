@@ -148,7 +148,7 @@ private:
   L4Re::Dma_space::Dma_addr _max = Last_dma_addr;
 
   L4::Cap<L4::Task> _dma_kern_space;
-  bool _identity_map;
+  bool const _identity_map;
 
   /**
    * Find any blocking, mapping or reservation in the given region.
