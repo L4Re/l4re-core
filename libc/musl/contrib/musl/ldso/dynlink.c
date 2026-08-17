@@ -1871,6 +1871,7 @@ extern weak hidden void (*const __preinit_array_start)(void), (*const __preinit_
 
 __attribute__ ((visibility ("hidden"))) void *__rtld_l4re_global_env;
 extern void *l4re_global_env __attribute__ ((alias ("__rtld_l4re_global_env")));
+extern void *l4_global_kip;
 
 void __dls3(size_t *sp, size_t *auxv)
 {
@@ -1915,6 +1916,8 @@ void __dls3(size_t *sp, size_t *auxv)
 	size_t tmp;
 	if (search_vec(auxv, &tmp, AT_L4_ENV))
 		l4re_global_env = (void*)tmp;
+	if (search_vec(auxv, &tmp, AT_L4_KIP))
+		l4_global_kip = (void*)tmp;
 
 	size_t init_array, init_array_sz;
 	if (   search_vec(ldso.dynv, &init_array, DT_INIT_ARRAY)
