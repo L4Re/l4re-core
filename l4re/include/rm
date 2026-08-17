@@ -634,7 +634,8 @@ public:
    * \param[out] offset  Offset at the beginning of the region within the
    *                     associated dataspace.
    * \param[out] flags   Region flags, see F::Region_flags (and F::In_area).
-   * \param[out] m       Associated dataspace or paging service.
+   * \param[out] m       Associated dataspace or paging service. May be an
+   *                     invalid capability, see below.
    *
    * \retval 0           Success
    * \retval -L4_EPERM   Operation not allowed.
@@ -646,6 +647,14 @@ public:
    * a reserved area, the area is returned and F::In_area is set in `flags`.
    * Note, in the case of an area the `offset` and `m` return values are
    * invalid.
+   *
+   * \note `m` is the dataspace that was passed when the region was attached.
+   *       It is #L4_INVALID_CAP whenever the region has no such dataspace,
+   *       which is the case for regions attached with F::Anonymous because
+   *       the memory is provided by the region manager itself. Additionally, the
+   *       capability slot may have been reused by the application in the
+   *       meantime. Thus, callers must be careful when using `m` of regions
+   *       that have been created or manipulated by other code.
    *
    * \verbatim
                      size-out
