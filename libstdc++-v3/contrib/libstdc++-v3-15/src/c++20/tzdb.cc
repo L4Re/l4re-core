@@ -206,7 +206,7 @@ namespace std::chrono
   constinit atomic<tzdb_list::_Node*> tzdb_list::_Node::_S_head_cache{nullptr};
 #endif
 
-  // The data structures defined in this file (Rule, on_day, at_time etc.)
+  // The data structures defined in this file (Rule, on_month_day, at_time etc.)
   // are used to represent the information parsed from the tzdata.zi file
   // described at https://man7.org/linux/man-pages/man8/zic.8.html#FILES
 
@@ -295,7 +295,7 @@ namespace std::chrono
     };
 
     // The IN and ON fields of a RULE record, e.g. "March lastSunday".
-    struct on_day
+    struct on_month_day
     {
       using rep = uint_least16_t;
       // Equivalent to Kind, chrono::month, chrono::day, chrono::weekday,
@@ -359,7 +359,8 @@ namespace std::chrono
 	return ymd;
       }
 
-      friend istream& operator>>(istream&, on_day&);
+
+      friend istream& operator>>(istream&, on_month_day&);
     };
 
     // Wrapper for two chrono::year values, which reads the FROM and TO
@@ -470,12 +471,13 @@ namespace std::chrono
 
       ZoneInfo(sys_info&& info)
       : m_buf(std::move(info.abbrev)), m_expanded(true), m_save(info.save),
-	m_offset(info.offset), m_until(info.end)
+	m_offset(info.offset - seconds(info.save)), m_until(info.end)
       { }
 
       ZoneInfo(const pair<sys_info, string_view>& info)
-      : m_expanded(true), m_save(info.first.save), m_offset(info.first.offset),
-	m_until(info.first.end)
+      : m_expanded(true), m_save(info.first.save),
+	m_offset(info.first.offset - seconds(info.first.save)),
+       	m_until(info.first.end)
       {
 	if (info.second.size())
 	  {
@@ -486,7 +488,7 @@ namespace std::chrono
 	m_buf += info.first.abbrev;
       }
 
-      // STDOFF: Seconds from UTC during standard time.
+      // STDOFF: Seconds from UTC during standard time (without any save).
       seconds
       offset() const noexcept { return m_offset; }
 
@@ -531,7 +533,7 @@ namespace std::chrono
 	  return false;
 
 	info.end = until();
-	info.offset = offset();
+	info.offset = offset() + seconds(m_save);
 	info.save = minutes(m_save);
 	info.abbrev = format();
 	format_abbrev_str(info); // expand %z
@@ -581,9 +583,9 @@ namespace std::chrono
     // A RULE record from the tzdata.zi timezone info file.
     struct Rule
     {
-      // This allows on_day to reuse padding of at_time.
+      // This allows on_month_day to reuse padding of at_time.
       // This keeps the size to 8 bytes and the alignment to 4 bytes.
-      struct datetime : at_time { on_day day; };
+      struct datetime : at_time { on_month_day day; };
 
       // TODO combining name+letters into a single string (like in ZoneInfo)
       // would save sizeof(string) and make Rule fit in a single cacheline.
@@ -645,17 +647,17 @@ namespace std::chrono
 	    << ' ' << r.when.day.get_month() << ' ';
 	switch (r.when.day.kind)
 	{
-	case on_day::DayOfMonth:
+	case on_month_day::DayOfMonth:
 	  out << (unsigned)r.when.day.get_day();
 	  break;
-	case on_day::LastWeekday:
+	case on_month_day::LastWeekday:
 	  out << "last" << weekday(r.when.day.day_of_week);
 	  break;
-	case on_day::LessEq:
+	case on_month_day::LessEq:
 	  out << weekday(r.when.day.day_of_week) << " <= "
 	    << r.when.day.day_of_month;
 	  break;
-	case on_day::GreaterEq:
+	case on_month_day::GreaterEq:
 	  out << weekday(r.when.day.day_of_week) << " >= "
 	    << r.when.day.day_of_month;
 	  break;
@@ -1008,10 +1010,10 @@ namespace std::chrono
 	  result_index = new_infos.size() - 1;
 	else if (result_index >= 0 && !merged)
 	  {
-	    // Finish on a DST sys_info if possible, so that if we resume
+	    // Finish before a STD sys_info if possible, so that if we resume
 	    // generating sys_info objects after this time point, save=0
 	    // should be correct for the next sys_info.
-	    if (num_after > 1 || info.save != 0min)
+	    if (num_after > 1 || !next_rule || next_rule->save == 0s)
 	      --num_after;
 	  }
 
@@ -2067,55 +2069,49 @@ namespace std::chrono
       }
     };
 
-    istream& operator>>(istream& in, on_day& to)
+    // Read the MONTH DAY. Three forms are accepted for DAY:
+    // * a plain day-of-month number (DayOfMonth),
+    // * "lastWww" where Www is a weekday name (LastWeekday),
+    // * "Www<=N" or "Www>=N" (LessEq / GreaterEq).
+    // On failure to read either MONTH or DAY this function sets
+    // failbit. If DAY is not parsed, only `on.month` is modified,
+    // otherwise `on` is left unchanged.
+    istream& operator>>(istream& in, on_month_day& on)
     {
-      on_day on{};
-      abbrev_month m{};
-      in >> m;
-      on.month = static_cast<unsigned>(m.m);
-      int c = ws(in).peek();
-      if ('0' <= c && c <= '9')
+      using enum on_month_day::Kind;
+      if (abbrev_month m{}; in >> m)
 	{
-	  on.kind = on_day::DayOfMonth;
-	  unsigned d;
-	  in >> d;
-	  if (d <= 31) [[likely]]
+ 	  on.month = static_cast<unsigned>(m.m);
+	  if (int c = ws(in).peek(); '0' <= c && c <= '9')
 	    {
-	      on.day_of_month = d;
-	      to = on;
-	      return in;
-	    }
-	}
-      else if (c == 'l') // lastSunday, lastWed, ...
-	{
-	  in.ignore(4);
-	  if (abbrev_weekday w{}; in >> w) [[likely]]
-	    {
-	      on.kind = on_day::LastWeekday;
-	      on.day_of_week = w.wd.c_encoding();
-	      to = on;
-	      return in;
-	    }
-	}
-      else
-	{
-	  abbrev_weekday w;
-	  in >> w;
-	  if (auto c = in.get(); c == '<' || c == '>')
-	    {
-	      if (in.get() == '=')
+	      if (unsigned d; (in >> d) && (d <= 31)) [[likely]]
 		{
-		  on.kind = c == '<' ? on_day::LessEq : on_day::GreaterEq;
+		  on.kind = DayOfMonth;
+		  on.day_of_month = d;
+		  return in;
+		}
+	    }
+	  else if (c == 'l') // lastSunday, lastWed, ...
+	    {
+	      in.ignore(4);
+	      if (abbrev_weekday w{}; in >> w) [[likely]]
+		{
+		  on.kind = LastWeekday;
 		  on.day_of_week = w.wd.c_encoding();
-		  unsigned d;
-		  in >> d;
-		  if (d <= 31) [[likely]]
+		  return in;
+		}
+	    }
+	  else if (abbrev_weekday w; in >> w) [[likely]]
+	    {
+	      if (c = in.get(); c == '<' || c == '>')
+		if (in.get() == '=')
+	          if (unsigned d; (in >> d) && (d <= 31)) [[likely]]
 		    {
+		      on.kind = c == '<' ? LessEq : GreaterEq;
+		      on.day_of_week = w.wd.c_encoding();
 		      on.day_of_month = d;
-		      to = on;
 		      return in;
 		    }
-		}
 	    }
 	}
       in.setstate(ios::failbit);
@@ -2224,12 +2220,12 @@ namespace std::chrono
       in.exceptions(ios::goodbit); // Don't throw ios::failure if YEAR absent.
       if (int y = int(year::max()); in >> y)
 	{
-	  abbrev_month m{January};
-	  int d = 1;
+	  on_month_day on{ .kind = on_month_day::DayOfMonth,
+			   .month = 1, .day_of_month = 1 };
 	  at_time t{};
-	  // XXX DAY should support ON format, e.g. lastSun or Sun>=8
-	  in >> m >> d >> t;
-	  inf.m_until = sys_days(year(y)/m.m/day(d)) + seconds(t.time);
+	  in >> on >> t;
+	  year_month_day ymd = on.pin(year(y));
+	  inf.m_until = sys_days(ymd) + seconds(t.time);
 	  if (t.indicator != at_time::Universal)
 	    { // UNTIL uses "the rules in effect just before the transition"
 	      // adjust by STDOFF
