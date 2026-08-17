@@ -152,6 +152,9 @@ static void find_memory()
         {
           unsigned long size = 1UL << order;
 
+          // Moe identity maps physical memory into its virtual address space.
+          // To not clash with nullptr, physical memory at address zero must not
+          // be used.
           if (addr == 0)
             {
               addr = L4_PAGESIZE;
