@@ -25,6 +25,7 @@ extern char log_buffer[1024];
 namespace Moe {
   // The maximum page order supported by moe, e.g. 1GiB on Arm64.
   static constexpr unsigned Max_phys_page_order = 30; // 1G
+  static constexpr l4_addr_t Max_phys_addr = static_cast<l4_addr_t>(-1);
 
   namespace Virt_limit {
     extern l4_addr_t start;

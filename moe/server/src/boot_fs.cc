@@ -176,7 +176,7 @@ Moe::Boot_fs::init_stage2()
                     static_cast<unsigned long>(mbi->mods_addr));
   unsigned num_modules = mbi->mods_count;
 
-  l4_addr_t m_low = -1;
+  l4_addr_t m_low = Moe::Max_phys_addr;
   l4_addr_t m_high = 0; // inclusive!
   for (unsigned mod = 0; mod < num_modules; ++mod)
     {
@@ -192,10 +192,10 @@ Moe::Boot_fs::init_stage2()
         }
 
       l4_addr_t const mod_start = modules[mod].mod_start;
-      if (mod_start != m_high + 1 && m_low != (l4_addr_t)-1)
+      if (mod_start != m_high + 1 && m_low != Moe::Max_phys_addr)
         {
           l4util_splitlog2_hdl(m_low, m_high, s0_request_ram);
-          m_low = -1;
+          m_low = Moe::Max_phys_addr;
           m_high = 0;
         }
 
@@ -241,7 +241,7 @@ Moe::Boot_fs::init_stage2()
                << name << "\n";
     }
 
-  if (m_low != (l4_addr_t)-1)
+  if (m_low != Moe::Max_phys_addr)
     l4util_splitlog2_hdl(m_low, m_high, s0_request_ram);
 
   dirinfo_ro.create_ds_and_register(rom_ns, "dirinfo-ro");

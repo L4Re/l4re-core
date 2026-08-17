@@ -137,7 +137,7 @@ l4_size_t Moe::Phys_limit::avail_ram;
 static void find_memory()
 {
   l4_addr_t addr;
-  l4_addr_t min_addr = ~0UL;
+  l4_addr_t min_addr = Moe::Max_phys_addr;
   l4_addr_t max_addr = 0;
 
   Single_page_alloc_base::can_free =
