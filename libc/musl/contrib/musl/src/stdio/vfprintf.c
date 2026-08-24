@@ -597,8 +597,10 @@ static int printf_core(FILE *f, const char *fmt, va_list *ap, union arg *nl_arg,
 			*(a=z-(p=1))=arg.i;
 			fl &= ~ZERO_PAD;
 			break;
+#ifndef CONFIG_BID_OPTIMIZE_SIZE
 		case 'm':
 			if (1) a = strerror(errno); else
+#endif
 		case 's':
 			a = arg.p ? arg.p : "(null)";
 			z = a + strnlen(a, p<0 ? INT_MAX : p);
