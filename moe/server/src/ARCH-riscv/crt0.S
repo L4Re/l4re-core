@@ -15,15 +15,17 @@
 #if __riscv_xlen == 32
   #define ELF_HDR_E_PHOFF 0x1c
   #define ELF_HDR_E_PHNUM 0x2c
+  #define ELF_PHENTSIZE   32
 #else
   #define ELF_HDR_E_PHOFF 0x20
   #define ELF_HDR_E_PHNUM 0x38
+  #define ELF_PHENTSIZE   56
 #endif
 
 .text
 
 /*
- * Provide the following stack layout to uclibc:
+ * Provide the following stack layout to the libc's startup code:
  *
  *  0x00  0     (argc)
  *  0x08  NULL  (argv final NULL)
@@ -33,7 +35,9 @@
  *  0x20  ?       <ptr to PHDRs>
  *  0x28  5       AT_PHNUM
  *  0x30  ?       <number of PHDRs>
- *  0x38  NULL    (auxv termination)
+ *  0x38  4       AT_PHENT
+ *  0x40  ?       <size of a PHDR entry>
+ *  0x48  NULL    (auxv termination)
  *
  * This is required for C++ exceptions to work in relocated (PIE) executables
  * and with libunwind (LLVM)!
@@ -52,7 +56,7 @@ _real_start:
 
   la sp, _stack_top
   /* Mind the argc/argv/env/auxv that needs to be on the stack! */
-  addi sp, sp,  -8 * SZREG
+  addi sp, sp,  -10 * SZREG
 
   la t0, __executable_start
 
@@ -62,10 +66,15 @@ _real_start:
   add t1, t0, t1
   REG_S t1, 4 * SZREG(sp)
 
-  li t1, 5                      // AT_PHDR
+  li t1, 5                      // AT_PHNUM
   REG_S t1, 5 * SZREG(sp)
-  lhu t1, ELF_HDR_E_PHNUM(t0)   // e_phoff
+  lhu t1, ELF_HDR_E_PHNUM(t0)   // e_phnum
   REG_S t1, 6 * SZREG(sp)
+
+  li t1, 4                      // AT_PHENT
+  REG_S t1, 7 * SZREG(sp)
+  li t1, ELF_PHENTSIZE          // sizeof(ElfN_Phdr)
+  REG_S t1, 8 * SZREG(sp)
 
   j _start
 

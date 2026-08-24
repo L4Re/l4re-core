@@ -20,7 +20,7 @@
 	.text
 
 /*
- * Provide the following stack layout to uclibc:
+ * Provide the following stack layout to the libc's startup code:
  *
  *	0x00	0	(argc)
  *	0x04	NULL	(argv final NULL)
@@ -30,7 +30,9 @@
  *	0x10	?		<ptr to PHDRs>
  *	0x14	5		AT_PHNUM
  *	0x18	?		<number of PHDRs>
- *	0x1c	NULL		(auxv termination)
+ *	0x1c	4		AT_PHENT
+ *	0x20	32		<size of a PHDR entry>
+ *	0x24	NULL		(auxv termination)
  *
  * This is required for C++ exceptions to work in relocated (PIE) executables
  * and with libunwind (LLVM)!
@@ -59,10 +61,15 @@ _real_start:
 	ldrh	r10, [r9, #0x2c]	// e_phnum
 	str	r10, [sp, #0x18]
 
+	mov	r10, #4			// AT_PHENT
+	str	r10, [sp, #0x1c]
+	mov	r10, #32		// sizeof(Elf32_Phdr)
+	str	r10, [sp, #0x20]
+
 	b	_start
 
 /* Mind the argc/argv/env/auxv that needs to be on the stack! */
-.LCstack: .word (_stack_top - _real_start - 32)
+.LCstack: .word (_stack_top - _real_start - 40)
 
 .LC__executable_start: .word (__executable_start - _real_start)
 

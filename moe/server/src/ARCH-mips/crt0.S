@@ -19,15 +19,17 @@
 #ifdef __mips64
 	#define ELF_HDR_E_PHOFF 0x20
 	#define ELF_HDR_E_PHNUM 0x38
+	#define ELF_PHENTSIZE 56
 #else
 	#define ELF_HDR_E_PHOFF 0x1c
 	#define ELF_HDR_E_PHNUM 0x2c
+	#define ELF_PHENTSIZE 32
 #endif
 
 .section .text, "ax"
 
 /*
- * Provide the following stack layout to uclibc:
+ * Provide the following stack layout to the libc's startup code:
  *
  *	0x00	0	(argc)
  *	0x08	NULL	(argv final NULL)
@@ -37,7 +39,9 @@
  *	0x20	?		<ptr to PHDRs>
  *	0x28	5		AT_PHNUM
  *	0x30	?		<number of PHDRs>
- *	0x38	NULL		(auxv termination)
+ *	0x38	4		AT_PHENT
+ *	0x40	?		<size of a PHDR entry>
+ *	0x48	NULL		(auxv termination)
  *
  * This is required for C++ exceptions to work in relocated (PIE) executables
  * and with libunwind (LLVM)!
@@ -53,7 +57,7 @@ _real_start:
 	SETUP_GPX($0)
 	SETUP_GPX64($25, $0)
 	/* Mind the argc/argv/env/auxv that needs to be on the stack! */
-	PTR_LA	$29, _stack_top - (8 * SZREG)
+	PTR_LA	$29, _stack_top - (10 * SZREG)
 
 	PTR_LA	$8, __executable_start
 
@@ -74,6 +78,11 @@ _real_start:
 #endif
 	LONG_ADDU	$9, $9, $10
 	LONG_S		$9, 6*SZREG($29)
+
+	li		$9, 4			// AT_PHENT
+	LONG_S		$9, 7*SZREG($29)
+	li		$9, ELF_PHENTSIZE	// sizeof(ElfN_Phdr)
+	LONG_S		$9, 8*SZREG($29)
 
 	PTR_LA	$25, __start
 	jalr $25
