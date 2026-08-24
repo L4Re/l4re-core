@@ -48,6 +48,10 @@ endef
 
 SRC_CC += pthread_stubs-nothreads.cc
 
+# Musl has no standalone reloc_static_pie(). Provide one for bootstrap and
+# sigma0.
+SRC_C-$(and $(CONFIG_L4_LIBC_MUSL),$(CONFIG_BID_PIE)) += reloc_static_pie.c
+
 $(foreach target,$(TARGET), $(eval $(call GEN_SRC_VARS,$(target))))
 
 $(GENERAL_D_LOC): $(SRC_DIR)/Make.rules $(LIBCSRC_DIR)/contrib_files.mk
