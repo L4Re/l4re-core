@@ -37,6 +37,7 @@ endchoice
 
 config COMPILER_RT_LIBGCC_SHARED
   bool "Use shared libgcc"
+  default y
   depends on COMPILER_RT_USE_LIBGCC && !COMPILER_RT_USE_TOOLCHAIN_LIBGCC
   depends on MMU
   help
